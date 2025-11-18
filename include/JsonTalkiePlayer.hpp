@@ -450,7 +450,6 @@ public:
 
 class TalkieDevice {
     private:
-        RtMidiOut midiOut;
         const std::string name;
         const unsigned int port;
         const bool verbose;
