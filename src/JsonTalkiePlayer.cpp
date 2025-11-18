@@ -159,6 +159,7 @@ void setRealTimeScheduling() {
 }
 
 
+
 double get_time_ms(int minutes_numerator, int minutes_denominator) {
 
     double milliseconds = minutes_numerator * 60000.0 / minutes_denominator;
@@ -166,6 +167,36 @@ double get_time_ms(int minutes_numerator, int minutes_denominator) {
     return std::round(milliseconds * 1000.0) / 1000.0;
 }
 
+
+static uint32_t message_id() {
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return static_cast<uint32_t>(millis);
+}
+
+
+static std::string encode(const nlohmann::json& message) {
+    return message.dump(); // Convert JSON to string
+}
+
+
+static uint16_t calculate_checksum(const std::string& data) {
+    uint16_t checksum = 0;
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data.c_str());
+    size_t len = data.length();
+    
+    for (size_t i = 0; i < len; i += 2) {
+        // Combine two bytes into 16-bit value
+        uint16_t chunk = bytes[i] << 8;
+        if (i + 1 < len) {
+            chunk |= bytes[i + 1];
+        }
+        checksum ^= chunk;
+    }
+    
+    return checksum & 0xFFFF;
+}
 
 int PlayList(const char* json_str, bool verbose) {
     
@@ -280,152 +311,7 @@ int PlayList(const char* json_str, bool verbose) {
                 std::unordered_set<std::string> unavailable_devices;
                 
                 // Check if jsonFileContent is a non-empty array
-                if (jsonFileContent.is_array() && !jsonFileContent.empty()) {
-
-                    // Access the first element
-                    const auto& firstElement = jsonFileContent.front();
-
-                    // Check if the first element is an object and contains the key "clock"
-                    if (firstElement.is_object() && firstElement.contains("clock")) {
-
-                        try
-                        {
-                            // Access the value associated with the key "clock"
-                            auto clockValue = firstElement.at("clock");
-                            // The devices JSON list key
-                            const unsigned int total_clock_pulses = clockValue["total_clock_pulses"];
-                            const unsigned int pulse_duration_min_numerator = clockValue["pulse_duration_min_numerator"];
-                            const unsigned int pulse_duration_min_denominator = clockValue["pulse_duration_min_denominator"];
-							auto last_position_ms = get_time_ms(total_clock_pulses * pulse_duration_min_numerator, pulse_duration_min_denominator);
-                            const nlohmann::json clocked_device_names = clockValue["clocked_devices"];
-                            const nlohmann::json controlled_device_names = clockValue["controlled_devices"];
-
-                            if (total_clock_pulses > 0 && pulse_duration_min_numerator > 0 && pulse_duration_min_denominator > 0) {
-
-                                std::unordered_set<MidiDevice*> clocked_devices;
-
-                                // First time any Device is tried to be connected, so, none is connected at this moment
-                                // It's a list of Devices that is given as Device
-                                for (std::string device_name : clocked_device_names) {
-
-                                    for (auto &available_device : available_midi_devices) {
-                                        if (available_device.getName().find(device_name) != std::string::npos) {
-                                            //
-                                            // Where the Device Port is connected/opened (Main reason for errors)
-                                            //
-                                            if (available_device.openPort()) {
-
-                                                if (clocked_devices.find(&available_device) != clocked_devices.end())
-                                                    continue;   // Already clocked!
-
-                                                connected_devices_by_name[device_name] = &available_device;
-                                                clocked_devices.insert(&available_device);
-                                                    
-                                                midiToProcess.push_back( MidiPin(0.0, &available_device, { system_clock_start }, 0x30) );
-                                                play_reporting.total_generated++;
-
-                                                for (unsigned int pulse_i = 1; pulse_i < total_clock_pulses; ++pulse_i) {
-
-                                                    midiToProcess.push_back(MidiPin(
-                                                        get_time_ms(pulse_i * pulse_duration_min_numerator, pulse_duration_min_denominator),
-                                                        &available_device,
-                                                        { system_timing_clock },
-                                                        0x30
-                                                    ));
-                                                    play_reporting.total_generated++;
-                                                }
-
-                                                midiToProcess.push_back(MidiPin(last_position_ms, &available_device, { system_clock_stop }, 0xB0));
-                                                play_reporting.total_generated++;
-
-                                                midiToProcess.push_back(MidiPin(last_position_ms, &available_device, { system_song_pointer, 0, 0 }, 0xB0));
-                                                play_reporting.total_generated++;
-
-                                            } else {
-                                                connected_devices_by_name[device_name] = nullptr;
-                                            }
-                                        } else {
-                                            // Just adds it as a processed device
-                                            unavailable_devices.insert(device_name);
-                                        }
-                                    }
-                                }
-
-                                std::unordered_set<MidiDevice*> controlled_devices;
-
-                                // First time any Device is tried to be connected, so, none is connected at this moment
-                                // It's a list of Devices that is given as Device
-                                for (std::string device_name : controlled_device_names) {
-
-                                    for (auto &available_device : available_midi_devices) {
-                                        if (available_device.getName().find(device_name) != std::string::npos) {
-                                            //
-                                            // Where the Device Port is connected/opened (Main reason for errors)
-                                            //
-                                            if (available_device.openPort()) {
-
-                                                if (controlled_devices.find(&available_device) != controlled_devices.end())
-                                                    continue;   // Already controlled!
-
-                                                connected_devices_by_name[device_name] = &available_device;
-                                                controlled_devices.insert(&available_device);
-                                                
-                                                // Action			MMC	SysEx
-                                                // Stop				F0 7F 7F 06 01 F7
-                                                // Play				F0 7F 7F 06 02 F7
-                                                // Deferred Play	F0 7F 7F 06 03 F7
-                                                // Fast Forward		F0 7F 7F 06 04 F7
-                                                // Rewind			F0 7F 7F 06 05 F7
-                                                // Record Strobe	F0 7F 7F 06 06 F7
-                                                // Record Exit		F0 7F 7F 06 07 F7
-                                                // Pause			F0 7F 7F 06 09 F7
-                                                // Locate			F0 7F 7F 06 44 … F7
-
-                                                // MMC - Play
-                                                midiToProcess.push_back(MidiPin(
-                                                    0.0,
-                                                    &available_device,
-                                                    { system_sysex_start, 0x7F, 0x7F, 0x06, 0x02, system_sysex_end },
-                                                    0x00    // Highest priority 0
-                                                ));
-                                                play_reporting.total_generated++;
-
-                                                // MMC - Stop
-                                                midiToProcess.push_back(MidiPin(
-                                                    last_position_ms,
-                                                    &available_device,
-                                                    { system_sysex_start, 0x7F, 0x7F, 0x06, 0x01, system_sysex_end },
-                                                    0xF0    // Lowest priority 16
-                                                ));
-                                                play_reporting.total_generated++;
-                                                
-                                                // MMC - Rewind
-                                                midiToProcess.push_back(MidiPin(
-                                                    last_position_ms,
-                                                    &available_device,
-                                                    { system_sysex_start, 0x7F, 0x7F, 0x06, 0x05, system_sysex_end },
-                                                    0xF0    // Lowest priority 16
-                                                ));
-                                                play_reporting.total_generated++;
-
-                                            } else {
-                                                connected_devices_by_name[device_name] = nullptr;
-                                            }
-                                        } else {
-                                            // Just adds it as a processed device
-                                            unavailable_devices.insert(device_name);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (const std::exception& e) {
-                            if (verbose) std::cerr << "Error: " << e.what() << std::endl;
-                        }
-
-                    } else {
-                        if (verbose) std::cerr << "No Clock given!" << std::endl;
-                    }
-                } else {
+                if (!jsonFileContent.is_array() || jsonFileContent.empty()) {
                     if (verbose) std::cerr << "JSON file is empty." << std::endl;
                 }
 
@@ -440,6 +326,7 @@ int PlayList(const char* json_str, bool verbose) {
 
                         // The devices JSON list key
                         nlohmann::json json_talkie_message = jsonElement["message"];
+
                         const std::string from = json_talkie_message["from"];
                         const int message_code = json_talkie_message["code"];
 
