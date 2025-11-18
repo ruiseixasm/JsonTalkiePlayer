@@ -123,7 +123,7 @@ unsigned int TalkieDevice::getDevicePort() const {
     return port;
 }
 
-void TalkieDevice::sendMessage(const std::vector<unsigned char> *talkie_message) {
+void TalkieDevice::sendMessage(const std::string *talkie_message) {
     
     
 }

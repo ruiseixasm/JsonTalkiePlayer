@@ -312,7 +312,7 @@ class TalkiePin {
 private:
     const double time_ms;
     TalkieDevice * const talkie_device = nullptr;
-    std::vector<unsigned char> talkie_message;  // Replaces talkie_message[3]
+    std::string talkie_message;  // Replaces talkie_message[3]
     // Auxiliary variable for the final playing loop!!
     double delay_time_ms = -1;
 
@@ -329,7 +329,7 @@ public:
 
     // Pin constructor
     TalkiePin(double time_milliseconds, TalkieDevice* talkie_device,
-        const std::vector<unsigned char>& json_talkie_message)
+        const std::string& json_talkie_message)
             : time_ms(time_milliseconds),
             talkie_device(talkie_device),
             talkie_message(json_talkie_message)
@@ -362,7 +362,7 @@ public:
         return this->delay_time_ms;
     }
 
-    std::vector<unsigned char> getMessage() const {
+    std::string getMessage() const {
         return this->talkie_message; // Returns a copy
     }
 
@@ -506,7 +506,7 @@ class TalkieDevice {
         bool hasPortOpen() const;
         const std::string& getName() const;
         unsigned int getDevicePort() const;
-        void sendMessage(const std::vector<unsigned char> *talkie_message);
+        void sendMessage(const std::string *talkie_message);
     };
     
 
