@@ -129,6 +129,7 @@ void TalkieDevice::closeSocket() {
     }
 }
 
+
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {
     if (talkie_message.empty()) {
         std::cerr << "Error: Empty message\n";
@@ -242,7 +243,9 @@ int PlayList(const char* json_str, bool verbose) {
         std::list<MidiPin> midiToProcess;
         std::list<MidiPin> midiProcessed;
 
-        std::vector<TalkieDevice> talkie_devices;
+        std::unordered_map<std::string, TalkieDevice> devices_by_name;
+        std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
+                
         std::list<TalkiePin> talkieToProcess;
         std::list<TalkiePin> talkieProcessed;
 
@@ -325,9 +328,6 @@ int PlayList(const char* json_str, bool verbose) {
                 std::unordered_map<std::string, MidiDevice*> connected_devices_by_name;
                 std::unordered_set<std::string> unavailable_devices;
 
-                std::unordered_map<std::string, TalkieDevice*> devices_by_name;
-                std::unordered_map<uint8_t, TalkieDevice*> devices_by_channel;
-                
                 // Keeps the last called device in the JsonTalkiePlayer file
                 MidiDevice *last_called_midi_device = nullptr;
 
@@ -335,16 +335,29 @@ int PlayList(const char* json_str, bool verbose) {
                 {
 
                     // Talkie message is just message
-                    if (jsonElement.contains("message")) {
+                    if (jsonElement.contains("time_ms") && jsonElement.contains("port") && jsonElement.contains("message")) {
 
                         double time_milliseconds = jsonElement["time_ms"];
+                        int target_port = jsonElement["port"];
                         nlohmann::json json_talkie_message = jsonElement["message"];
                         json_talkie_message["i"] = message_id(time_milliseconds);
                         json_talkie_message["c"] = 0;
                         json_talkie_message["c"] = calculate_checksum(encode(json_talkie_message));
-
+                        
 
                         play_reporting.total_incorrect++;
+
+                        if (json_talkie_message["t"].is_string()) {
+                            std::string name = json_talkie_message["t"].get<std::string>();
+                            devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
+                        } else if (json_talkie_message["t"].is_number()) {
+                            uint8_t channel = json_talkie_message["t"].get<uint8_t>();
+                            devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
+                        } else {
+                            continue;
+                        }
+
+
 
                         // talkieToProcess.push_back( TalkiePin(time_milliseconds, last_called_midi_device, json_talkie_message) );
                         play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop

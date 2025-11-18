@@ -401,16 +401,22 @@ class TalkieDevice {
         // Socket variables
         bool socket_initialized = false;
         std::string target_ip = "255.255.255.255";
-        int target_port = 5005;
+        int target_port;
         int sockfd;
         struct sockaddr_in server_addr;
     
         
     public:
-        TalkieDevice(int port, bool verbose = false)
+        TalkieDevice(int port = 5005, bool verbose = false)
                     : target_port(port), verbose(verbose) { }
         ~TalkieDevice() { closeSocket(); }
-    
+
+        // Explicitly delete copy assignment
+        TalkieDevice& operator=(const TalkieDevice&) = delete;
+        // Use this class as non-copyable but movable
+        TalkieDevice(TalkieDevice&&) = default;           // Move constructor OK
+        TalkieDevice& operator=(TalkieDevice&&) = default; // Move assignment OK
+
         bool initializeSocket();
         void setTargetIP(const std::string& ip);
         void closeSocket();
