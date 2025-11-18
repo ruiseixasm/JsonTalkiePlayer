@@ -78,28 +78,31 @@ void TalkiePin::pluckTooth() {
 
 // TalkieDevice methods definition
 bool TalkieDevice::initializeSocket() {
-    if (!opened_port && !unavailable_device) {
-        try {
-            // Server address parameters
-            memset(&server_addr, 0, sizeof(server_addr));
-            server_addr.sin_family = AF_INET;
-            server_addr.sin_port = htons(5005);  // 5005 is the default port of JsonTalkie
-            server_addr.sin_addr.s_addr = inet_addr("255.255.255.255");  // Destination Broadcast IP address
-
-            // Create UDP socket
-            if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-                if (verbose) std::cerr << "Failed to create socket\n";
-                return 1;
-            }
-            opened_port = true;
-
-        } catch (RtMidiError &error) {
-            unavailable_device = true;
-            error.printMessage();
-        }
-
+    if (socket_initialized) {
+        return true;  // Socket already exists
     }
-    return opened_port;
+    
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        std::cerr << "Failed to create socket\n";
+        return false;
+    }
+    
+    // Configure with CURRENT class variables
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(target_port);
+    
+    if (inet_pton(AF_INET, target_ip.c_str(), &server_addr.sin_addr) <= 0) {
+        std::cerr << "Invalid IP address: " << target_ip << "\n";
+        close(sockfd);
+        sockfd = -1;
+        return false;
+    }
+    
+    socket_initialized = true;
+    std::cout << "Socket initialized for " << target_ip << ":" << target_port << "\n";
+    return true;
 }
 
 
