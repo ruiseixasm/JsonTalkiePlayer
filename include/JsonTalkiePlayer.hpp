@@ -36,8 +36,8 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #ifdef _WIN32
     #define NOMINMAX    // disables the definition of min and max macros.
     #define WIN32_LEAN_AND_MEAN
-    // #include <winsock2.h>
-    // #include <ws2tcpip.h>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
     #include <Windows.h>
     #include <processthreadsapi.h> // For SetProcessInformation
     #pragma comment(lib, "ws2_32.lib")

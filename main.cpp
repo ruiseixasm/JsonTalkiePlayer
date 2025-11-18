@@ -13,10 +13,12 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonMidiCreator
 https://github.com/ruiseixasm/JsonTalkiePlayer
 */
-#include <iostream>
+
+// SHALL E INCLUDED FIRST THAN EVERYTHING ELSE !!
+#include "JsonTalkiePlayer.hpp"
+
 #include <fstream>
 #include <sstream>
-#include <string>
 
 // Testing program in the project folder
 //   Windows: .\build\Release\JsonTalkiePlayer.exe -v .\windows_exported_lead_sheet_melody_jmp.json
@@ -30,8 +32,6 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #else
     #include <getopt.h>             // Used to process inputed arguments from the command line
 #endif
-
-#include "JsonTalkiePlayer.hpp"
 
 void printUsage(const char *programName) {
     std::cout << "Usage: " << programName << " [options] input_file_1.json [input_file_2.json]\n"
