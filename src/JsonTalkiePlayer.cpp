@@ -80,16 +80,6 @@ void TalkiePin::pluckTooth() {
 bool TalkieDevice::openPort() {
     if (!opened_port && !unavailable_device) {
         try {
-            midiOut.openPort(port);
-            opened_port = true;
-            if (verbose) std::cout << "   " << name;
-        } catch (RtMidiError &error) {
-            unavailable_device = true;
-            error.printMessage();
-        }
-
-
-        try {
             // Server address parameters
             memset(&server_addr, 0, sizeof(server_addr));
             server_addr.sin_family = AF_INET;
@@ -114,11 +104,8 @@ bool TalkieDevice::openPort() {
 
 void TalkieDevice::closePort() {
     if (opened_port) {
-        midiOut.closePort();
-
         // Close Socket
         close(sockfd);
-
         opened_port = false;
         if (verbose) std::cout << "   " << name;
     }
@@ -137,7 +124,8 @@ unsigned int TalkieDevice::getDevicePort() const {
 }
 
 void TalkieDevice::sendMessage(const std::vector<unsigned char> *talkie_message) {
-    midiOut.sendMessage(talkie_message);
+    
+    
 }
 
 
