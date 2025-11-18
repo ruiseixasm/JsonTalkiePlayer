@@ -507,9 +507,39 @@ int PlayList(const char* json_str, bool verbose) {
             debugging_last = std::chrono::high_resolution_clock::now();
             #endif
 
+            //
+            // Where the final Statistics are calculated
+            //
+
+            if (talkieProcessed.size() > 0) {
+
+                for (auto &talkie_pin : talkieProcessed) {
+                    auto delay_time_ms = talkie_pin.getDelayTime();
+                    play_reporting.total_delay += delay_time_ms;
+                    play_reporting.maximum_delay = std::max(play_reporting.maximum_delay, delay_time_ms);
+                }
+
+                play_reporting.minimum_delay = play_reporting.maximum_delay;
+                play_reporting.average_delay = play_reporting.total_delay / talkieProcessed.size();
+
+                for (auto &talkie_pin : talkieProcessed) {
+                    auto delay_time_ms = talkie_pin.getDelayTime();
+                    play_reporting.minimum_delay = std::min(play_reporting.minimum_delay, delay_time_ms);
+                    play_reporting.sd_delay += std::pow(delay_time_ms - play_reporting.average_delay, 2);
+                }
+
+                play_reporting.sd_delay /= talkieProcessed.size();
+                play_reporting.sd_delay = std::sqrt(play_reporting.sd_delay);
+            }
 
         }
 
+
+        if (verbose) std::cout << "Devices disconnected: ";
+        // Exiting devices scope automatically disconnects them
+
+
+    }
 
     // Where the reporting is finally done
     if (verbose) std::cout << std::endl << "Midi stats reporting:" << std::endl;
@@ -521,115 +551,6 @@ int PlayList(const char* json_str, bool verbose) {
     if (verbose) std::cout << "\tMinimum delay (ms): " << std::setw(36) << play_reporting.minimum_delay << " /" << std::endl;
     if (verbose) std::cout << "\tAverage delay (ms): " << std::setw(36) << play_reporting.average_delay << " \\" << std::endl;
     if (verbose) std::cout << "\tStandard deviation of delays (ms):" << std::setw(36 - 14) << play_reporting.sd_delay << " /"  << std::endl;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if (midiToProcess.size() == 0) {
-
-
-
-        } else {
-
-            //
-            // Where the existing Midi messages are sorted by time and other parameters
-            //
-
-            // Two levels sorting criteria
-            midiToProcess.sort([]( const MidiPin &a, const MidiPin &b ) {
-                
-                // Time is the primary sorting criteria
-                if (a.getTime() != b.getTime())  
-                    return a.getTime() < b.getTime();           // Primary: Sort by time (ascending)
-            
-                // Then sort by Priority (Ascendent)
-                // Must be "<" instead of "<=" due to the mysterious "strict weak ordering"
-                // Explanation here: https://youtu.be/fi0CQ7laiXE?si=fysJC-UdG2lJytjU&t=1542
-                return a.getPriority() < b.getPriority();      // Secondary: Sort by priority (ascending)
-                
-            });
-
-            
-            //
-            // Where the Midi messages are sent to each Device
-            //
-
-            auto playing_start = std::chrono::high_resolution_clock::now();
-
-            while (midiToProcess.size() > 0) {
-                
-                MidiPin &midi_pin = midiToProcess.front();  // Pin MIDI message
-
-                long long next_pin_time_us = std::round((midi_pin.getTime() + play_reporting.total_drag) * 1000);
-                auto playing_now = std::chrono::high_resolution_clock::now();
-                auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(playing_now - playing_start);
-                long long elapsed_time_us = elapsed_time.count();
-                long long sleep_time_us = next_pin_time_us > elapsed_time_us ? next_pin_time_us - elapsed_time_us : 0;
-
-                highResolutionSleep(sleep_time_us);  // Sleep for x microseconds
-
-                auto pluck_time = std::chrono::high_resolution_clock::now() - playing_start;
-                midi_pin.pluckTooth();  // as soon as possible! <----- Midi Send
-
-                auto pluck_time_us = static_cast<double>(
-                    std::chrono::duration_cast<std::chrono::microseconds>(pluck_time).count()
-                );
-                double delay_time_ms = (pluck_time_us - next_pin_time_us) / 1000;
-                midi_pin.setDelayTime(delay_time_ms);
-                midiProcessed.push_back(std::move(midiToProcess.front()));  // Move the object
-                midiToProcess.pop_front();  // Remove the first element
-
-                // Process drag if existent
-                if (delay_time_ms > DRAG_DURATION_MS)
-                    play_reporting.total_drag += delay_time_ms - DRAG_DURATION_MS;  // Drag isn't Delay
-            }
-
-            //
-            // Where the final Statistics are calculated
-            //
-
-            if (midiProcessed.size() > 0) {
-
-                for (auto &midi_pin : midiProcessed) {
-                    auto delay_time_ms = midi_pin.getDelayTime();
-                    play_reporting.total_delay += delay_time_ms;
-                    play_reporting.maximum_delay = std::max(play_reporting.maximum_delay, delay_time_ms);
-                }
-
-                play_reporting.minimum_delay = play_reporting.maximum_delay;
-                play_reporting.average_delay = play_reporting.total_delay / midiProcessed.size();
-
-                for (auto &midi_pin : midiProcessed) {
-                    auto delay_time_ms = midi_pin.getDelayTime();
-                    play_reporting.minimum_delay = std::min(play_reporting.minimum_delay, delay_time_ms);
-                    play_reporting.sd_delay += std::pow(delay_time_ms - play_reporting.average_delay, 2);
-                }
-
-                play_reporting.sd_delay /= midiProcessed.size();
-                play_reporting.sd_delay = std::sqrt(play_reporting.sd_delay);
-            }
-        }
-        
-
-
-
-
-    if (verbose) std::cout << "Devices disconnected: ";
-    // Exiting devices scope automatically disconnects them
-    }
 
 
     return 0;
