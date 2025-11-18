@@ -70,7 +70,7 @@ class TalkiePin {
 private:
     const double time_ms;
     TalkieDevice * const talkie_device = nullptr;
-    std::string talkie_message;  // Replaces talkie_message[3]
+    std::string talkie_message;
     // Auxiliary variable for the final playing loop!!
     double delay_time_ms = -1;
 

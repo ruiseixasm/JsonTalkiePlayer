@@ -203,12 +203,12 @@ int PlayList(const char* json_str, bool verbose) {
         debugging_now = std::chrono::high_resolution_clock::now();
         auto completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
         completion_time_us = completion_time.count();
-        std::cout << "MIDI DEVICES FULLY PROCESSED IN: " << completion_time_us << " microseconds" << std::endl;
+        std::cout << "TALKIE DEVICES FULLY PROCESSED IN: " << completion_time_us << " microseconds" << std::endl;
         debugging_last = std::chrono::high_resolution_clock::now();
         #endif
 
         //
-        // Where the JSON content is processed and added up the Pluck midi messages
+        // Where the JSON content is processed and added up the Pluck Talkie messages
         //
 
         if (verbose) std::cout << "Devices connected:    ";
@@ -357,7 +357,7 @@ int PlayList(const char* json_str, bool verbose) {
             debugging_now = std::chrono::high_resolution_clock::now();
             completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
             completion_time_us = completion_time.count();
-            std::cout << "MIDI MESSAGES CLEANING UP FULLY PROCESSED IN: " << completion_time_us << " microseconds" << std::endl;
+            std::cout << "TALKIE MESSAGES CLEANING UP FULLY PROCESSED IN: " << completion_time_us << " microseconds" << std::endl;
             debugging_last = std::chrono::high_resolution_clock::now();
             #endif
 
@@ -389,7 +389,7 @@ int PlayList(const char* json_str, bool verbose) {
 
             while (talkieToProcess.size() > 0) {
                 
-                TalkiePin &talkie_pin = talkieToProcess.front();  // Pin MIDI message
+                TalkiePin &talkie_pin = talkieToProcess.front();  // Pin TALKIE message
 
                 long long next_pin_time_us = std::round((talkie_pin.getTime() + play_reporting.total_drag) * 1000);
                 auto playing_now = std::chrono::high_resolution_clock::now();
@@ -517,45 +517,4 @@ void highResolutionSleep(long long microseconds) {
 #endif
 }
 
-/*
-    Voice Message           Status Byte      Data Byte1          Data Byte2
-    -------------           -----------   -----------------   -----------------
-    Note off                      8x      Key number          Note Off velocity
-    Note on                       9x      Key number          Note on velocity
-    Polyphonic Key Pressure       Ax      Key number          Amount of pressure
-    Control Change                Bx      Controller number   Controller value
-    Program Change                Cx      Program number      None
-    Channel Pressure              Dx      Pressure value      None            
-    Pitch Bend                    Ex      MSB                 LSB
-    Song Position Ptr             F2      0                   0
 
-    System Real-Time Message         Status Byte 
-    ------------------------         -----------
-    Timing Clock                         F8
-    Start Sequence                       FA
-    Continue Sequence                    FB
-    Stop Sequence                        FC
-    Active Sensing                       FE
-    System Reset                         FF
-
-
-    SysEx Message                    Status Byte 
-    ------------------------         -----------
-    0xF0: SysEx Start
-    <Data Bytes>: Manufacturer ID + Command + Data
-    0xF7: SysEx End
-
-    self_playlist.append(
-        {
-            "time_ms": self.get_time_ms(single_pulse_duration_ms * total_clock_pulses),
-            "midi_message": {
-                "status_byte": 0xF0,    # Start of SysEx
-                "data_bytes": [0x7F, 0x7F, 0x06, 0x01],  # Universal Stop command
-                "end_byte": 0xF7,       # End of SysEx
-                "device": devices
-            }
-        }
-    )
-
-
-*/
