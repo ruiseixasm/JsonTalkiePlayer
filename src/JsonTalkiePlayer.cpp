@@ -615,6 +615,40 @@ int PlayList(const char* json_str, bool verbose) {
             });
 
 
+            //
+            // Where the Talkie messages are sent to each Device
+            //
+
+            auto playing_start = std::chrono::high_resolution_clock::now();
+
+            while (talkieToProcess.size() > 0) {
+                
+                TalkiePin &talkie_pin = talkieToProcess.front();  // Pin MIDI message
+
+                long long next_pin_time_us = std::round((talkie_pin.getTime() + play_reporting.total_drag) * 1000);
+                auto playing_now = std::chrono::high_resolution_clock::now();
+                auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(playing_now - playing_start);
+                long long elapsed_time_us = elapsed_time.count();
+                long long sleep_time_us = next_pin_time_us > elapsed_time_us ? next_pin_time_us - elapsed_time_us : 0;
+
+                highResolutionSleep(sleep_time_us);  // Sleep for x microseconds
+
+                auto pluck_time = std::chrono::high_resolution_clock::now() - playing_start;
+                talkie_pin.pluckTooth();  // as soon as possible! <----- Midi Send
+
+                auto pluck_time_us = static_cast<double>(
+                    std::chrono::duration_cast<std::chrono::microseconds>(pluck_time).count()
+                );
+                double delay_time_ms = (pluck_time_us - next_pin_time_us) / 1000;
+                talkie_pin.setDelayTime(delay_time_ms);
+                talkieProcessed.push_back(std::move(talkieToProcess.front()));  // Move the object
+                talkieToProcess.pop_front();  // Remove the first element
+
+                // Process drag if existent
+                if (delay_time_ms > DRAG_DURATION_MS)
+                    play_reporting.total_drag += delay_time_ms - DRAG_DURATION_MS;  // Drag isn't Delay
+            }
+
 
         }
 
