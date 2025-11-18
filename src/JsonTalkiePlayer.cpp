@@ -107,16 +107,11 @@ void TalkieDevice::closePort() {
         // Close Socket
         close(sockfd);
         opened_port = false;
-        if (verbose) std::cout << "   " << name;
     }
 }
 
 bool TalkieDevice::hasPortOpen() const {
     return opened_port;
-}
-
-const std::string& TalkieDevice::getName() const {
-    return name;
 }
 
 unsigned int TalkieDevice::getDevicePort() const {
