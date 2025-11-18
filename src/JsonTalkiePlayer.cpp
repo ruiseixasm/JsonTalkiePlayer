@@ -434,8 +434,36 @@ int PlayList(const char* json_str, bool verbose) {
 
                 for (auto jsonElement : jsonFileContent)
                 {
+
+                    // Talkie message is just message
+                    if (jsonElement.contains("message")) {
+
+                        // The devices JSON list key
+                        nlohmann::json json_talkie_message = jsonElement["message"];
+                        const std::string from = json_talkie_message["from"];
+                        const int message_code = json_talkie_message["code"];
+
+                        if (json_talkie_message.contains("name")) {
+
+                            const std::string device_name = json_talkie_message["name"];
+
+
+
+                        } else if (json_talkie_message.contains("channel")) {
+
+                            const uint8_t device_channel = json_talkie_message["channel"];
+
+
+
+                        }
+
+
+
+                        // TO BE IMPLEMENTED !!!
+
+
                     // Most of the time it's a midi_message being processed, so it makes sense to be the first to check
-                    if (jsonElement.contains("midi_message")) {
+                    } else if (jsonElement.contains("midi_message")) {
 
                         if (last_called_midi_device != nullptr) {
 
