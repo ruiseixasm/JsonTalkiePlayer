@@ -438,7 +438,7 @@ class TalkieDevice {
         bool hasPortOpen() const;
         const std::string& getName() const;
         unsigned int getDevicePort() const;
-        void sendMessage(const std::string *talkie_message);
+        bool sendMessage(const std::string& talkie_message);
     };
     
 
