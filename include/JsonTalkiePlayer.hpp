@@ -403,6 +403,8 @@ class TalkieDevice {
         bool opened_port = false;
         bool unavailable_device = false;
         // Socket variables
+        std::string target_ip = "255.255.255.255";
+        int target_port = 5005;
         int sockfd;
         struct sockaddr_in server_addr;
     
