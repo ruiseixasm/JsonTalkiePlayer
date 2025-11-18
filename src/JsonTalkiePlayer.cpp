@@ -65,6 +65,10 @@ void MidiDevice::sendMessage(const std::vector<unsigned char> *midi_message) {
 
 
 
+
+
+
+
 // TalkiePin methods definition
 void TalkiePin::pluckTooth() {
     if (talkie_device != nullptr)
@@ -107,8 +111,8 @@ unsigned int TalkieDevice::getDevicePort() const {
     return port;
 }
 
-void TalkieDevice::sendMessage(const std::vector<unsigned char> *midi_message) {
-    midiOut.sendMessage(midi_message);
+void TalkieDevice::sendMessage(const std::vector<unsigned char> *talkie_message) {
+    midiOut.sendMessage(talkie_message);
 }
 
 

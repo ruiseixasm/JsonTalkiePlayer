@@ -403,23 +403,23 @@ public:
     size_t level = 1;   // VERY IMPORTANT TO AVOID EARLIER NOTE OFF
 
     // Intended for Note On only
-    bool operator == (const TalkiePin &midi_pin) {
+    bool operator == (const TalkiePin &talkie_pin) {
         // mapped by Channel, so, with the same Channel for sure
-        return this->getDataByte(1) == midi_pin.getDataByte(1); // Key number
+        return this->getDataByte(1) == talkie_pin.getDataByte(1); // Key number
     }
 
     // Intended for Automation messages only
-    bool operator != (const TalkiePin &midi_pin) {
+    bool operator != (const TalkiePin &talkie_pin) {
         // mapped by status byte, so, with the same action type for sure
         switch (this->getAction()) {
             case action_control_change:
             case action_key_pressure:
-                return this->getDataByte(2) != midi_pin.getDataByte(2);
+                return this->getDataByte(2) != talkie_pin.getDataByte(2);
             case action_pitch_bend:
-                return this->getDataByte(1) != midi_pin.getDataByte(1) ||
-                        this->getDataByte(2) != midi_pin.getDataByte(2);
+                return this->getDataByte(1) != talkie_pin.getDataByte(1) ||
+                        this->getDataByte(2) != talkie_pin.getDataByte(2);
             case action_channel_pressure:
-                return this->getDataByte(1) != midi_pin.getDataByte(1);
+                return this->getDataByte(1) != talkie_pin.getDataByte(1);
         }
         return true;
     }
