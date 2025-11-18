@@ -234,6 +234,11 @@ int PlayList(const char* json_str, bool verbose) {
         std::list<MidiPin> midiToProcess;
         std::list<MidiPin> midiProcessed;
 
+        std::vector<TalkieDevice> talkie_devices;
+        std::list<TalkiePin> talkieToProcess;
+        std::list<TalkiePin> talkieProcessed;
+
+
         //
         // Where each Available Device is collected BUT NOT connected
         //
@@ -303,15 +308,18 @@ int PlayList(const char* json_str, bool verbose) {
                     continue;
                 }
 
-                // Dictionary where the key is a JSON list
-                std::unordered_map<std::string, MidiDevice*> connected_devices_by_name;
-                std::unordered_set<std::string> unavailable_devices;
-                
                 // Check if jsonFileContent is a non-empty array
                 if (!jsonFileContent.is_array() || jsonFileContent.empty()) {
                     if (verbose) std::cerr << "JSON file is empty." << std::endl;
                 }
 
+                // Dictionary where the key is a JSON list
+                std::unordered_map<std::string, MidiDevice*> connected_devices_by_name;
+                std::unordered_set<std::string> unavailable_devices;
+
+                std::unordered_map<std::string, TalkieDevice*> devices_by_name;
+                std::unordered_map<uint8_t, TalkieDevice*> devices_by_channel;
+                
                 // Keeps the last called device in the JsonTalkiePlayer file
                 MidiDevice *last_called_midi_device = nullptr;
 
@@ -321,14 +329,18 @@ int PlayList(const char* json_str, bool verbose) {
                     // Talkie message is just message
                     if (jsonElement.contains("message")) {
 
-                        nlohmann::json json_talkie_message = jsonElement["message"];
                         double time_milliseconds = jsonElement["time_ms"];
+                        nlohmann::json json_talkie_message = jsonElement["message"];
                         json_talkie_message["i"] = message_id(time_milliseconds);
                         json_talkie_message["c"] = 0;
                         json_talkie_message["c"] = calculate_checksum(encode(json_talkie_message));
 
 
+                        play_reporting.total_incorrect++;
 
+                        // talkieToProcess.push_back( TalkiePin(time_milliseconds, last_called_midi_device, json_talkie_message) );
+                        play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
+                        play_reporting.total_validated++;
                         // TO BE IMPLEMENTED !!!
 
 

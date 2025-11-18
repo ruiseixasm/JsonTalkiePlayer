@@ -311,7 +311,6 @@ class TalkiePin {
 
 private:
     const double time_ms;
-    const unsigned char priority;
     TalkieDevice * const talkie_device = nullptr;
     std::vector<unsigned char> talkie_message;  // Replaces talkie_message[3]
     // Auxiliary variable for the final playing loop!!
@@ -322,7 +321,6 @@ public:
     // needed for emplace and insert of the std::unordered_map inside TalkieDevice class !!
     TalkiePin()
         : time_ms(0),                   // Default to 0
-        priority(0),                    // Default to 0
         talkie_device(nullptr),           // Default to nullptr
         talkie_message(),                 // Default to an empty vector
         delay_time_ms(-1),              // Default to -1
@@ -331,11 +329,10 @@ public:
 
     // Pin constructor
     TalkiePin(double time_milliseconds, TalkieDevice* talkie_device,
-        const std::vector<unsigned char>& json_talkie_message, const unsigned char priority = 0xFF)
+        const std::vector<unsigned char>& json_talkie_message)
             : time_ms(time_milliseconds),
             talkie_device(talkie_device),
-            talkie_message(json_talkie_message),    // Directly initialize talkie_message
-            priority(priority)
+            talkie_message(json_talkie_message)
         { }
 
     // Pin copy constructor
@@ -343,7 +340,6 @@ public:
         : time_ms(other.time_ms),                     // Copy the time_ms
           talkie_device(other.talkie_device),             // Copy the pointer to the TalkieDevice
           talkie_message(other.talkie_message),           // Copy the talkie_message vector
-          priority(other.priority),                   // Copy the priority
           delay_time_ms(other.delay_time_ms),         // Copy the delay_time_ms
           level(other.level)                          // Copy the level
     { }
@@ -392,10 +388,6 @@ public:
 
     unsigned char getAction() const {
         return this->talkie_message[0] & 0xF0;
-    }
-
-    unsigned char getPriority() const {
-        return this->priority;
     }
 
     TalkieDevice * const getDevice() const {
