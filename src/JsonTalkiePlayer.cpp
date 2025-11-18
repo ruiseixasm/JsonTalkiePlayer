@@ -120,7 +120,7 @@ const std::string& TalkieDevice::getName() const {
 }
 
 unsigned int TalkieDevice::getDevicePort() const {
-    return port;
+    return target_port;
 }
 
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {

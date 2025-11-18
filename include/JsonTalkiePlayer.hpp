@@ -398,7 +398,6 @@ public:
 class TalkieDevice {
     private:
         const std::string name;
-        const unsigned int port;
         const bool verbose;
         bool opened_port = false;
         bool unavailable_device = false;
@@ -410,13 +409,13 @@ class TalkieDevice {
     
         
     public:
-        TalkieDevice(std::string device_name, unsigned int device_port, bool verbose = false)
-                    : name(device_name), port(device_port), verbose(verbose) { }
+        TalkieDevice(int port, bool verbose = false)
+                    : target_port(port), verbose(verbose) { }
         ~TalkieDevice() { closePort(); }
     
         // Move constructor
         TalkieDevice(TalkieDevice &&other) noexcept :
-                name(std::move(other.name)), port(other.port), verbose(other.verbose),
+                name(std::move(other.name)), target_port(other.target_port), verbose(other.verbose),
                 opened_port(other.opened_port) { }
     
         // Delete the copy constructor and copy assignment operator
