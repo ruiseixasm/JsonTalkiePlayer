@@ -401,6 +401,7 @@ class TalkieDevice {
         bool opened_port = false;
         bool unavailable_device = false;
         // Socket variables
+        bool socket_initialized = false;
         std::string target_ip = "255.255.255.255";
         int target_port = 5005;
         int sockfd;
@@ -430,6 +431,7 @@ class TalkieDevice {
         }
     
         bool openPort();
+        void setTarget(const std::string& ip);
         void closePort();
         bool hasPortOpen() const;
         unsigned int getDevicePort() const;

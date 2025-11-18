@@ -102,6 +102,22 @@ bool TalkieDevice::openPort() {
     return opened_port;
 }
 
+
+void TalkieDevice::setTarget(const std::string& ip) {
+    target_ip = ip;
+    
+    // If socket exists, we need to update server_addr
+    if (socket_initialized) {
+        memset(&server_addr, 0, sizeof(server_addr));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(target_port);
+        inet_pton(AF_INET, target_ip.c_str(), &server_addr.sin_addr);
+        
+        std::cout << "Target updated to " << target_ip << ":" << target_port << "\n";
+    }
+}
+
+
 void TalkieDevice::closePort() {
     if (opened_port) {
         // Close Socket
