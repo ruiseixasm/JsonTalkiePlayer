@@ -51,7 +51,6 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 
 // External libraries
 #include <nlohmann/json.hpp>    // Include the JSON library
-#include "RtMidi.h"             // Includes the necessary MIDI library
 
 
 // #define DEBUGGING true
@@ -59,32 +58,6 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #define FILE_URL  "https://github.com/ruiseixasm/JsonTalkiePlayer"
 #define VERSION   "1.0.0"
 #define DRAG_DURATION_MS (1000.0/((120/60)*24))
-
-
-// Taken from: https://users.cs.cf.ac.uk/Dave.Marshall/Multimedia/node158.html
-
-const unsigned char action_note_off         = 0x80; // Note off
-const unsigned char action_note_on          = 0x90; // Note on
-const unsigned char action_key_pressure     = 0xA0; // Polyphonic Key Pressure
-const unsigned char action_control_change   = 0xB0; // Control Change
-const unsigned char action_program_change   = 0xC0; // Program Change
-const unsigned char action_channel_pressure = 0xD0; // Channel Pressure
-const unsigned char action_pitch_bend       = 0xE0; // Pitch Bend
-const unsigned char action_system           = 0xF0; // Device related Messages, System
-
-const unsigned char system_sysex_start      = 0xF0; // Sysex Start
-const unsigned char system_time_mtc         = 0xF1; // MIDI Time Code Quarter Frame
-const unsigned char system_song_pointer     = 0xF2; // Song Position Pointer
-const unsigned char system_song_select      = 0xF3; // Song Select
-const unsigned char system_tune_request     = 0xF6; // Tune Request
-const unsigned char system_sysex_end        = 0xF7; // Sysex End
-const unsigned char system_timing_clock     = 0xF8; // Timing Clock
-const unsigned char system_clock_start      = 0xFA; // Start
-const unsigned char system_clock_continue   = 0xFB; // Continue
-const unsigned char system_clock_stop       = 0xFC; // Stop
-const unsigned char system_active_sensing   = 0xFE; // Active Sensing
-const unsigned char system_system_reset     = 0xFF; // System Reset
-
 
 
 
