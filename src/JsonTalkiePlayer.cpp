@@ -527,39 +527,7 @@ int PlayList(const char* json_str, bool verbose) {
                 
             });
 
-            // Get time_ms of last message
-            auto last_message_time_ms = midiToProcess.back().getTime();
             
-            
-            for (auto &device : available_midi_devices) {
-                
-                if (device.hasPortOpen()) {
-                    
-                    // MIDI NOTES SHALL NOT BE LEFT PRESSED !!
-                    // Add the needed note off for all those still on at the end!
-                    // Iterate over all keys and values
-                    for (const auto& pair : device.last_pin_note_on) {
-                        unsigned char channel_key = pair.first;
-                        auto& note_on_list = pair.second;
-
-                        for (MidiPin *last_pin_note_on : note_on_list) {
-                            // Transform midi on in midi off
-                            std::vector<unsigned char> midi_message = {
-                                static_cast<unsigned char>(last_pin_note_on->getChannel() | action_note_off),    // note_off_status_byte
-                                last_pin_note_on->getDataByte(1),
-                                last_pin_note_on->getDataByte(2)
-                            };
-                            // Adds a new MidiPin as a copy to the list of pins to be processed
-                            midiToProcess.push_back( MidiPin(last_message_time_ms, &device, midi_message) );
-                        }
-                    }
-
-                    // LAST MIDI CLOCK MESSAGE SHALL BE STOP
-                    if (device.last_pin_clock != nullptr && device.last_pin_clock->getStatusByte() == system_timing_clock)
-                        device.last_pin_clock->setStatusByte(system_clock_stop);    // Clock Stop
-                }
-            }
-
             #ifdef DEBUGGING
             debugging_now = std::chrono::high_resolution_clock::now();
             completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
