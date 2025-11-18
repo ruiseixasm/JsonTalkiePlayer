@@ -238,11 +238,6 @@ int PlayList(const char* json_str, bool verbose) {
 
     // Where the playing happens
     {
-        // Under its own scope in order to disconnect all devices before the stats reporting !
-        std::vector<MidiDevice> available_midi_devices;
-        std::list<MidiPin> midiToProcess;
-        std::list<MidiPin> midiProcessed;
-
         std::unordered_map<std::string, TalkieDevice> devices_by_name;
         std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
                 
@@ -381,7 +376,7 @@ int PlayList(const char* json_str, bool verbose) {
             if (verbose) std::cout << "\tTotal validated Midi Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
             if (verbose) std::cout << "\tTotal incorrect Midi Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
             if (verbose) std::cout << "\tTotal redundant Midi Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
-            if (verbose) std::cout << "\tTotal resultant Midi Messages (included): " << std::setw(10) << midiToProcess.size() << std::endl;
+            if (verbose) std::cout << "\tTotal resultant Midi Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
 
             
         } else {
