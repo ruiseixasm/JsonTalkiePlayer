@@ -176,7 +176,6 @@ int PlayList(const char* json_str, bool verbose) {
         size_t json_processing  = 0;    // milliseconds
         size_t total_validated  = 0;
         size_t total_incorrect  = 0;
-        size_t total_redundant  = 0;
         double total_drag       = 0.0;
         double total_delay      = 0.0;
         double maximum_delay    = 0.0;
@@ -327,7 +326,6 @@ int PlayList(const char* json_str, bool verbose) {
             if (verbose) std::cout << "\tTalkie Messages processing time (ms):       " << std::setw(10) << play_reporting.json_processing << std::endl;
             if (verbose) std::cout << "\tTotal validated Talkie Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
             if (verbose) std::cout << "\tTotal incorrect Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
-            if (verbose) std::cout << "\tTotal redundant Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
             if (verbose) std::cout << "\tTotal resultant Talkie Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
 
             
@@ -369,7 +367,6 @@ int PlayList(const char* json_str, bool verbose) {
             if (verbose) std::cout << "\tTalkie Messages processing time (ms):       " << std::setw(10) << play_reporting.json_processing << std::endl;
             if (verbose) std::cout << "\tTotal validated Talkie Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
             if (verbose) std::cout << "\tTotal incorrect Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
-            if (verbose) std::cout << "\tTotal redundant Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
             if (verbose) std::cout << "\tTotal resultant Talkie Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
 
             TalkiePin *last_pin = &talkieToProcess.back();
