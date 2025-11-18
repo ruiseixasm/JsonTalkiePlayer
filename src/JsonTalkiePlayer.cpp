@@ -124,7 +124,21 @@ unsigned int TalkieDevice::getDevicePort() const {
 }
 
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {
+    if (talkie_message.empty()) {
+        std::cerr << "Error: Empty message\n";
+        return false;
+    }
     
+    int message_len = talkie_message.length();
+
+    // Send message to server
+    if (sendto(sockfd, talkie_message.c_str(), message_len, 0, 
+               (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        std::cerr << "Failed to send message: " << strerror(errno) << "\n";
+        return false;
+    }
+
+    std::cout << "Message sent successfully\n";
     return true;
 }
 
