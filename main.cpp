@@ -1,7 +1,7 @@
 /*
-JsonMidiPlayer - Json Midi Player is intended to be used
+JsonTalkiePlayer - Json Midi Player is intended to be used
 in conjugation with the Json Midi Creator to Play its composed Elements
-Original Copyright (c) 2024 Rui Seixas Monteiro. All right reserved.
+Original Copyright (c) 2025 Rui Seixas Monteiro. All right reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonMidiCreator
-https://github.com/ruiseixasm/JsonMidiPlayer
+https://github.com/ruiseixasm/JsonTalkiePlayer
 */
 #include <iostream>
 #include <fstream>
@@ -19,10 +19,10 @@ https://github.com/ruiseixasm/JsonMidiPlayer
 #include <string>
 
 // Testing program in the project folder
-//   Windows: .\build\Release\JsonMidiPlayer.exe -v .\windows_exported_lead_sheet_melody_jmp.json
-//            .\build\Release\JsonMidiPlayer.exe -Version
-//   Linux: ./build/Release/JsonMidiPlayer.out -v ./linux_exported_lead_sheet_melody_jmp.json
-//          ./build/Release/JsonMidiPlayer.out -Version
+//   Windows: .\build\Release\JsonTalkiePlayer.exe -v .\windows_exported_lead_sheet_melody_jmp.json
+//            .\build\Release\JsonTalkiePlayer.exe -Version
+//   Linux: ./build/Release/JsonTalkiePlayer.out -v ./linux_exported_lead_sheet_melody_jmp.json
+//          ./build/Release/JsonTalkiePlayer.out -Version
 
 // #ifdef _WIN32    // Check if it's a Windows machine
 #ifdef _MSC_VER     // Check if using Microsoft compiler (Visual Studio 2019 or later) (#if _MSC_VER >= 1920)
@@ -31,7 +31,7 @@ https://github.com/ruiseixasm/JsonMidiPlayer
     #include <getopt.h>             // Used to process inputed arguments from the command line
 #endif
 
-#include "JsonMidiPlayer.hpp"
+#include "JsonTalkiePlayer.hpp"
 
 void printUsage(const char *programName) {
     std::cout << "Usage: " << programName << " [options] input_file_1.json [input_file_2.json]\n"
@@ -39,7 +39,7 @@ void printUsage(const char *programName) {
               << "  -h, --help       Show this help message and exit\n"
               << "  -v, --verbose    Enable verbose mode\n"
               << "  -V, --version    Prints the current version number\n\n"
-              << "More info here: https://github.com/ruiseixasm/JsonMidiPlayer\n\n";
+              << "More info here: https://github.com/ruiseixasm/JsonTalkiePlayer\n\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
                 verbose = 1;
                 break;
             case 'V': // Handle the --version option
-                std::cout << "JsonMidiPlayer " << VERSION << std::endl;
+                std::cout << "JsonTalkiePlayer " << VERSION << std::endl;
                 return 0;   // Exit after printing the version
             case '?':
                 // getopt_long already printed an error message.

@@ -1,7 +1,7 @@
 /*
-JsonMidiPlayer - Json Midi Player is intended to be used
+JsonTalkiePlayer - Json Midi Player is intended to be used
 in conjugation with the Json Midi Creator to Play its composed Elements
-Original Copyright (c) 2024 Rui Seixas Monteiro. All right reserved.
+Original Copyright (c) 2025 Rui Seixas Monteiro. All right reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -11,9 +11,9 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonMidiCreator
-https://github.com/ruiseixasm/JsonMidiPlayer
+https://github.com/ruiseixasm/JsonTalkiePlayer
 */
-#include "JsonMidiPlayer.hpp"
+#include "JsonTalkiePlayer.hpp"
 
 // MidiPin methods definition
 void MidiPin::pluckTooth() {
@@ -115,7 +115,7 @@ int PlayList(const char* json_str, bool verbose) {
     PlayReporting play_reporting;
 
     
-    if (verbose) std::cout << "JsonMidiPlayer version: " << VERSION << std::endl;
+    if (verbose) std::cout << "JsonTalkiePlayer version: " << VERSION << std::endl;
 
     // Where the playing happens
     {
@@ -347,7 +347,7 @@ int PlayList(const char* json_str, bool verbose) {
                     if (verbose) std::cerr << "JSON file is empty." << std::endl;
                 }
 
-                // Keeps the last called device in the JsonMidiPlayer file
+                // Keeps the last called device in the JsonTalkiePlayer file
                 MidiDevice *last_called_midi_device = nullptr;
 
                 for (auto jsonElement : jsonFileContent)

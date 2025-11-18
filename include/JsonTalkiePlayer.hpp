@@ -1,7 +1,7 @@
 /*
-JsonMidiPlayer - Json Midi Player is intended to be used
+JsonTalkiePlayer - Json Midi Player is intended to be used
 in conjugation with the Json Midi Creator to Play its composed Elements
-Original Copyright (c) 2024 Rui Seixas Monteiro. All right reserved.
+Original Copyright (c) 2025 Rui Seixas Monteiro. All right reserved.
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonMidiCreator
-https://github.com/ruiseixasm/JsonMidiPlayer
+https://github.com/ruiseixasm/JsonTalkiePlayer
 */
 #ifndef MIDI_JSON_PLAYER_HPP
 #define MIDI_JSON_PLAYER_HPP
@@ -44,7 +44,7 @@ https://github.com/ruiseixasm/JsonMidiPlayer
 
 // #define DEBUGGING true
 #define FILE_TYPE "Json Midi Player"
-#define FILE_URL  "https://github.com/ruiseixasm/JsonMidiPlayer"
+#define FILE_URL  "https://github.com/ruiseixasm/JsonTalkiePlayer"
 #define VERSION   "6.0.0"
 #define DRAG_DURATION_MS (1000.0/((120/60)*24))
 
