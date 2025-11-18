@@ -15,52 +15,6 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 */
 #include "JsonTalkiePlayer.hpp"
 
-// MidiPin methods definition
-void MidiPin::pluckTooth() {
-    if (midi_device != nullptr)
-        midi_device->sendMessage(&midi_message);
-}
-
-
-// MidiDevice methods definition
-bool MidiDevice::openPort() {
-    if (!opened_port && !unavailable_device) {
-        try {
-            midiOut.openPort(port);
-            opened_port = true;
-            if (verbose) std::cout << "   " << name;
-        } catch (RtMidiError &error) {
-            unavailable_device = true;
-            error.printMessage();
-        }
-    }
-    return opened_port;
-}
-
-void MidiDevice::closePort() {
-    if (opened_port) {
-        midiOut.closePort();
-        opened_port = false;
-        if (verbose) std::cout << "   " << name;
-    }
-}
-
-bool MidiDevice::hasPortOpen() const {
-    return opened_port;
-}
-
-const std::string& MidiDevice::getName() const {
-    return name;
-}
-
-unsigned int MidiDevice::getDevicePort() const {
-    return port;
-}
-
-void MidiDevice::sendMessage(const std::vector<unsigned char> *midi_message) {
-    midiOut.sendMessage(midi_message);
-}
-
 
 
 

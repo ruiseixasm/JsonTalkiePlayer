@@ -266,7 +266,7 @@ class MidiDevice {
     public:
         MidiDevice(std::string device_name, unsigned int device_port, bool verbose = false)
                     : name(device_name), port(device_port), verbose(verbose) { }
-        ~MidiDevice() { closePort(); }
+        ~MidiDevice() { }
     
         // Move constructor
         MidiDevice(MidiDevice &&other) noexcept : midiOut(std::move(other.midiOut)),
@@ -289,12 +289,7 @@ class MidiDevice {
             return *this;
         }
     
-        bool openPort();
-        void closePort();
-        bool hasPortOpen() const;
-        const std::string& getName() const;
-        unsigned int getDevicePort() const;
-        void sendMessage(const std::vector<unsigned char> *midi_message);
+
     };
     
 
