@@ -168,11 +168,8 @@ double get_time_ms(int minutes_numerator, int minutes_denominator) {
 }
 
 
-static uint32_t message_id() {
-    auto now = std::chrono::system_clock::now();
-    auto duration = now.time_since_epoch();
-    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    return static_cast<uint32_t>(millis);
+static uint32_t message_id(const double time_milliseconds) {
+    return static_cast<uint32_t>(time_milliseconds);
 }
 
 
@@ -324,25 +321,11 @@ int PlayList(const char* json_str, bool verbose) {
                     // Talkie message is just message
                     if (jsonElement.contains("message")) {
 
-                        // The devices JSON list key
                         nlohmann::json json_talkie_message = jsonElement["message"];
-
-                        const std::string from = json_talkie_message["from"];
-                        const int message_code = json_talkie_message["code"];
-
-                        if (json_talkie_message.contains("name")) {
-
-                            const std::string device_name = json_talkie_message["name"];
-
-
-
-                        } else if (json_talkie_message.contains("channel")) {
-
-                            const uint8_t device_channel = json_talkie_message["channel"];
-
-
-
-                        }
+                        double time_milliseconds = jsonElement["time_ms"];
+                        json_talkie_message["i"] = message_id(time_milliseconds);
+                        json_talkie_message["c"] = 0;
+                        json_talkie_message["c"] = calculate_checksum(encode(json_talkie_message));
 
 
 
