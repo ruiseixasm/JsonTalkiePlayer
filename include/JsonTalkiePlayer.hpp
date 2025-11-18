@@ -413,28 +413,12 @@ class TalkieDevice {
                     : target_port(port), verbose(verbose) { }
         ~TalkieDevice() { closeSocket(); }
     
-        // Move constructor
-        TalkieDevice(TalkieDevice &&other) noexcept :
-                target_port(other.target_port), verbose(other.verbose),
-                opened_port(other.opened_port) { }
-    
-        // Delete the copy constructor and copy assignment operator
-        TalkieDevice(const TalkieDevice &) = delete;
-        TalkieDevice &operator=(const TalkieDevice &) = delete;
-    
-        // Move assignment operator
-        TalkieDevice &operator=(TalkieDevice &&other) noexcept {
-            if (this != &other) {
-                opened_port = other.opened_port;
-            }
-            return *this;
-        }
-    
         bool initializeSocket();
         void setTargetIP(const std::string& ip);
         void closeSocket();
-        bool hasSocketOpen() const;
-        unsigned int getDevicePort() const;
+        bool hasSocketOpen() const { return socket_initialized; }
+        std::string getTargetIp() const { return target_ip; }
+        int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
     };
     

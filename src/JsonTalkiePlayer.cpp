@@ -122,19 +122,11 @@ void TalkieDevice::setTargetIP(const std::string& ip) {
 
 
 void TalkieDevice::closeSocket() {
-    if (opened_port) {
+    if (socket_initialized) {
         // Close Socket
         close(sockfd);
-        opened_port = false;
+        socket_initialized = false;
     }
-}
-
-bool TalkieDevice::hasSocketOpen() const {
-    return opened_port;
-}
-
-unsigned int TalkieDevice::getDevicePort() const {
-    return target_port;
 }
 
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {
