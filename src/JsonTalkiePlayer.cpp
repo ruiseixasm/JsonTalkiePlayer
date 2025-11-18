@@ -68,7 +68,7 @@ void MidiDevice::sendMessage(const std::vector<unsigned char> *midi_message) {
 // TalkiePin methods definition
 void TalkiePin::pluckTooth() {
     if (talkie_device != nullptr)
-        talkie_device->sendMessage(&midi_message);
+        talkie_device->sendMessage(&talkie_message);
 }
 
 

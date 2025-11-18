@@ -307,7 +307,7 @@ private:
     const double time_ms;
     const unsigned char priority;
     TalkieDevice * const talkie_device = nullptr;
-    std::vector<unsigned char> midi_message;  // Replaces midi_message[3]
+    std::vector<unsigned char> talkie_message;  // Replaces midi_message[3]
     // Auxiliary variable for the final playing loop!!
     double delay_time_ms = -1;
 
@@ -318,7 +318,7 @@ public:
         : time_ms(0),                   // Default to 0
         priority(0),                    // Default to 0
         talkie_device(nullptr),           // Default to nullptr
-        midi_message(),                 // Default to an empty vector
+        talkie_message(),                 // Default to an empty vector
         delay_time_ms(-1),              // Default to -1
         level(1)                        // Default to 1
     { }
@@ -328,7 +328,7 @@ public:
         const std::vector<unsigned char>& json_midi_message, const unsigned char priority = 0xFF)
             : time_ms(time_milliseconds),
             talkie_device(midi_device),
-            midi_message(json_midi_message),    // Directly initialize midi_message
+            talkie_message(json_midi_message),    // Directly initialize midi_message
             priority(priority)
         { }
 
@@ -336,7 +336,7 @@ public:
     TalkiePin(const TalkiePin& other)
         : time_ms(other.time_ms),                     // Copy the time_ms
           talkie_device(other.talkie_device),             // Copy the pointer to the TalkieDevice
-          midi_message(other.midi_message),           // Copy the midi_message vector
+          talkie_message(other.talkie_message),           // Copy the midi_message vector
           priority(other.priority),                   // Copy the priority
           delay_time_ms(other.delay_time_ms),         // Copy the delay_time_ms
           level(other.level)                          // Copy the level
@@ -361,31 +361,31 @@ public:
     }
 
     std::vector<unsigned char> getMessage() const {
-        return this->midi_message; // Returns a copy
+        return this->talkie_message; // Returns a copy
     }
 
     void setStatusByte(unsigned char status_byte) {
-        this->midi_message[0] = status_byte;
+        this->talkie_message[0] = status_byte;
     }
 
     unsigned char getStatusByte() const {
-        return this->midi_message[0];
+        return this->talkie_message[0];
     }
 
     void setDataByte(int nth_byte, unsigned char data_byte) {
-        this->midi_message[nth_byte] = data_byte;
+        this->talkie_message[nth_byte] = data_byte;
     }
 
     unsigned char getDataByte(int nth_byte = 1) const {
-        return this->midi_message[nth_byte];
+        return this->talkie_message[nth_byte];
     }
 
     unsigned char getChannel() const {
-        return this->midi_message[0] & 0x0F;
+        return this->talkie_message[0] & 0x0F;
     }
 
     unsigned char getAction() const {
-        return this->midi_message[0] & 0xF0;
+        return this->talkie_message[0] & 0xF0;
     }
 
     unsigned char getPriority() const {
