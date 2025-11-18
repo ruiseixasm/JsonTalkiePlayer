@@ -174,7 +174,6 @@ int PlayList(const char* json_str, bool verbose) {
 
     struct PlayReporting {
         size_t json_processing  = 0;    // milliseconds
-        size_t total_generated  = 0;
         size_t total_validated  = 0;
         size_t total_incorrect  = 0;
         size_t total_redundant  = 0;
@@ -326,7 +325,6 @@ int PlayList(const char* json_str, bool verbose) {
             // Where the reporting is finally done
             if (verbose) std::cout << "Data stats reporting:" << std::endl;
             if (verbose) std::cout << "\tTalkie Messages processing time (ms):       " << std::setw(10) << play_reporting.json_processing << std::endl;
-            if (verbose) std::cout << "\tTotal generated Talkie Messages (included): " << std::setw(10) << play_reporting.total_generated << std::endl;
             if (verbose) std::cout << "\tTotal validated Talkie Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
             if (verbose) std::cout << "\tTotal incorrect Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
             if (verbose) std::cout << "\tTotal redundant Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
@@ -369,7 +367,6 @@ int PlayList(const char* json_str, bool verbose) {
             // Where the reporting is finally done
             if (verbose) std::cout << "Data stats reporting:" << std::endl;
             if (verbose) std::cout << "\tTalkie Messages processing time (ms):       " << std::setw(10) << play_reporting.json_processing << std::endl;
-            if (verbose) std::cout << "\tTotal generated Talkie Messages (included): " << std::setw(10) << play_reporting.total_generated << std::endl;
             if (verbose) std::cout << "\tTotal validated Talkie Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
             if (verbose) std::cout << "\tTotal incorrect Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
             if (verbose) std::cout << "\tTotal redundant Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
