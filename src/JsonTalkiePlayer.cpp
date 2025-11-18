@@ -250,32 +250,6 @@ int PlayList(const char* json_str, bool verbose) {
         std::list<TalkiePin> talkieProcessed;
 
 
-        //
-        // Where each Available Device is collected BUT NOT connected
-        //
-
-        try {
-            RtMidiOut midiOut;  // Temporary MidiOut manipulator
-            unsigned int nPorts = midiOut.getPortCount();
-            if (nPorts == 0) {
-                if (verbose) std::cout << "No output Midi devices available.\n";
-                return 1;
-            }
-            if (verbose) std::cout << "Available output Midi devices:\n";
-            for (unsigned int i = 0; i < nPorts; i++) {
-                std::string portName = midiOut.getPortName(i);
-                if (verbose) std::cout << "\tMidi device #" << i << ": " << portName << std::endl;
-                available_midi_devices.push_back(MidiDevice(portName, i, verbose));   // The object is copied
-            }
-            if (available_midi_devices.size() == 0) {
-                if (verbose) std::cout << "\tNo output Midi devices available.\n";
-                return 1;
-            }
-        } catch (RtMidiError &error) {
-            error.printMessage();
-            return EXIT_FAILURE;
-        }
-
         #ifdef DEBUGGING
         debugging_now = std::chrono::high_resolution_clock::now();
         auto completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
@@ -323,13 +297,6 @@ int PlayList(const char* json_str, bool verbose) {
                 if (!jsonFileContent.is_array() || jsonFileContent.empty()) {
                     if (verbose) std::cerr << "JSON file is empty." << std::endl;
                 }
-
-                // Dictionary where the key is a JSON list
-                std::unordered_map<std::string, MidiDevice*> connected_devices_by_name;
-                std::unordered_set<std::string> unavailable_devices;
-
-                // Keeps the last called device in the JsonTalkiePlayer file
-                MidiDevice *last_called_midi_device = nullptr;
 
 
                 TalkieDevice *talkie_device = nullptr;
