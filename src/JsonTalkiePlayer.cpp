@@ -596,6 +596,45 @@ int PlayList(const char* json_str, bool verbose) {
         debugging_last = std::chrono::high_resolution_clock::now();
         #endif
 
+
+
+
+        if (talkieToProcess.size() == 0) {
+
+            
+        } else {
+
+            //
+            // Where the existing Midi messages are sorted by time and other parameters
+            //
+
+            // Two levels sorting criteria
+            talkieToProcess.sort([]( const TalkiePin &a, const TalkiePin &b ) {
+            
+                 return a.getTime() < b.getTime();
+            });
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         if (midiToProcess.size() == 0) {
 
             auto data_processing_finish = std::chrono::high_resolution_clock::now();
