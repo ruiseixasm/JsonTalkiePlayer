@@ -398,8 +398,6 @@ public:
 class TalkieDevice {
     private:
         const bool verbose;
-        bool opened_port = false;
-        bool unavailable_device = false;
         // Socket variables
         bool socket_initialized = false;
         std::string target_ip = "255.255.255.255";
