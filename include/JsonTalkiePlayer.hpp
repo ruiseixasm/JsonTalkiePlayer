@@ -323,8 +323,7 @@ public:
         : time_ms(0),                   // Default to 0
         talkie_device(nullptr),           // Default to nullptr
         talkie_message(),                 // Default to an empty vector
-        delay_time_ms(-1),              // Default to -1
-        level(1)                        // Default to 1
+        delay_time_ms(-1)
     { }
 
     // Pin constructor
@@ -340,8 +339,7 @@ public:
         : time_ms(other.time_ms),                     // Copy the time_ms
           talkie_device(other.talkie_device),             // Copy the pointer to the TalkieDevice
           talkie_message(other.talkie_message),           // Copy the talkie_message vector
-          delay_time_ms(other.delay_time_ms),         // Copy the delay_time_ms
-          level(other.level)                          // Copy the level
+          delay_time_ms(other.delay_time_ms)
     { }
 
     double getTime() const {
@@ -392,57 +390,6 @@ public:
 
     TalkieDevice * const getDevice() const {
         return this->talkie_device;
-    }
-
-
-public:
-
-    // If this is a Note On pin, then, by definition, is already at level 1
-    size_t level = 1;   // VERY IMPORTANT TO AVOID EARLIER NOTE OFF
-
-    // Intended for Note On only
-    bool operator == (const TalkiePin &talkie_pin) {
-        // mapped by Channel, so, with the same Channel for sure
-        return this->getDataByte(1) == talkie_pin.getDataByte(1); // Key number
-    }
-
-    // Intended for Automation messages only
-    bool operator != (const TalkiePin &talkie_pin) {
-        // mapped by status byte, so, with the same action type for sure
-        switch (this->getAction()) {
-            case action_control_change:
-            case action_key_pressure:
-                return this->getDataByte(2) != talkie_pin.getDataByte(2);
-            case action_pitch_bend:
-                return this->getDataByte(1) != talkie_pin.getDataByte(1) ||
-                        this->getDataByte(2) != talkie_pin.getDataByte(2);
-            case action_channel_pressure:
-                return this->getDataByte(1) != talkie_pin.getDataByte(1);
-        }
-        return true;
-    }
-
-    // Prefix increment
-    TalkiePin& operator++() {
-        ++level;
-        return *this;
-    }
-    // Postfix increment
-    TalkiePin operator++(int) {
-        TalkiePin temp = *this;
-        ++level;
-        return temp;
-    }
-    // Prefix decrement
-    TalkiePin& operator--() {
-        --level;
-        return *this;
-    }
-    // Postfix decrement
-    TalkiePin operator--(int) {
-        TalkiePin temp = *this;
-        --level;
-        return temp;
     }
 
 };
