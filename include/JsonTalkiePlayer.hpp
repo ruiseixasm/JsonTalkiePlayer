@@ -297,6 +297,11 @@ class MidiDevice {
     };
     
 
+
+
+
+
+    
     
 class TalkieDevice;
 
@@ -505,7 +510,7 @@ class TalkieDevice {
         bool hasPortOpen() const;
         const std::string& getName() const;
         unsigned int getDevicePort() const;
-        void sendMessage(const std::vector<unsigned char> *midi_message);
+        void sendMessage(const std::vector<unsigned char> *talkie_message);
     };
     
 
