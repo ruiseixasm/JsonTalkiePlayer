@@ -63,6 +63,59 @@ void MidiDevice::sendMessage(const std::vector<unsigned char> *midi_message) {
 
 
 
+
+
+// TalkiePin methods definition
+void TalkiePin::pluckTooth() {
+    if (talkie_device != nullptr)
+        talkie_device->sendMessage(&midi_message);
+}
+
+
+// TalkieDevice methods definition
+bool TalkieDevice::openPort() {
+    if (!opened_port && !unavailable_device) {
+        try {
+            midiOut.openPort(port);
+            opened_port = true;
+            if (verbose) std::cout << "   " << name;
+        } catch (RtMidiError &error) {
+            unavailable_device = true;
+            error.printMessage();
+        }
+    }
+    return opened_port;
+}
+
+void TalkieDevice::closePort() {
+    if (opened_port) {
+        midiOut.closePort();
+        opened_port = false;
+        if (verbose) std::cout << "   " << name;
+    }
+}
+
+bool TalkieDevice::hasPortOpen() const {
+    return opened_port;
+}
+
+const std::string& TalkieDevice::getName() const {
+    return name;
+}
+
+unsigned int TalkieDevice::getDevicePort() const {
+    return port;
+}
+
+void TalkieDevice::sendMessage(const std::vector<unsigned char> *midi_message) {
+    midiOut.sendMessage(midi_message);
+}
+
+
+
+
+
+
 // Function to set real-time scheduling
 void setRealTimeScheduling() {
 #ifdef _WIN32

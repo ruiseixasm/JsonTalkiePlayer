@@ -306,7 +306,7 @@ class TalkiePin {
 private:
     const double time_ms;
     const unsigned char priority;
-    TalkieDevice * const midi_device = nullptr;
+    TalkieDevice * const talkie_device = nullptr;
     std::vector<unsigned char> midi_message;  // Replaces midi_message[3]
     // Auxiliary variable for the final playing loop!!
     double delay_time_ms = -1;
@@ -317,7 +317,7 @@ public:
     TalkiePin()
         : time_ms(0),                   // Default to 0
         priority(0),                    // Default to 0
-        midi_device(nullptr),           // Default to nullptr
+        talkie_device(nullptr),           // Default to nullptr
         midi_message(),                 // Default to an empty vector
         delay_time_ms(-1),              // Default to -1
         level(1)                        // Default to 1
@@ -327,7 +327,7 @@ public:
     TalkiePin(double time_milliseconds, TalkieDevice* midi_device,
         const std::vector<unsigned char>& json_midi_message, const unsigned char priority = 0xFF)
             : time_ms(time_milliseconds),
-            midi_device(midi_device),
+            talkie_device(midi_device),
             midi_message(json_midi_message),    // Directly initialize midi_message
             priority(priority)
         { }
@@ -335,7 +335,7 @@ public:
     // Pin copy constructor
     TalkiePin(const TalkiePin& other)
         : time_ms(other.time_ms),                     // Copy the time_ms
-          midi_device(other.midi_device),             // Copy the pointer to the TalkieDevice
+          talkie_device(other.talkie_device),             // Copy the pointer to the TalkieDevice
           midi_message(other.midi_message),           // Copy the midi_message vector
           priority(other.priority),                   // Copy the priority
           delay_time_ms(other.delay_time_ms),         // Copy the delay_time_ms
@@ -347,7 +347,7 @@ public:
     }
 
     TalkieDevice *getTalkieDevice() const {
-        return midi_device;
+        return talkie_device;
     }
 
     void pluckTooth();
@@ -393,7 +393,7 @@ public:
     }
 
     TalkieDevice * const getDevice() const {
-        return this->midi_device;
+        return this->talkie_device;
     }
 
 
