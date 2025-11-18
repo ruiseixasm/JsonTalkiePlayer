@@ -406,21 +406,7 @@ class TalkieDevice {
         int sockfd;
         struct sockaddr_in server_addr;
     
-    public:
-    
-        // Keeps TalkiePin pointers
-        std::unordered_map<unsigned char, std::list<TalkiePin*>>
-                                                    last_pin_note_on;   // For Note On tracking
         
-        // Keeps TalkiePin dummy copies
-        std::unordered_map<unsigned char, TalkiePin>  last_pin_byte_8;    // For Pitch Bend and Aftertouch alike
-        std::unordered_map<uint16_t, TalkiePin>       last_pin_byte_16;   // For Control Change and Key Pressure
-
-        // Keeps TalkiePin pointers
-        TalkiePin *last_pin_clock = nullptr;          // Midi clock messages 0xF0
-        TalkiePin *last_pin_song_pointer = nullptr;   // Midi clock messages 0xF2
-    
-    
     public:
         TalkieDevice(std::string device_name, unsigned int device_port, bool verbose = false)
                     : name(device_name), port(device_port), verbose(verbose) { }
