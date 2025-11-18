@@ -13,8 +13,8 @@ Lesser General Public License for more details.
 https://github.com/ruiseixasm/JsonMidiCreator
 https://github.com/ruiseixasm/JsonTalkiePlayer
 */
-#ifndef MIDI_JSON_PLAYER_HPP
-#define MIDI_JSON_PLAYER_HPP
+#ifndef JSON_TALKIE_PLAYER_HPP
+#define JSON_TALKIE_PLAYER_HPP
 
 #include <iostream>
 #include <string>
@@ -301,7 +301,7 @@ class MidiDevice {
 
 
 
-    
+
     
 class TalkieDevice;
 
@@ -312,7 +312,7 @@ private:
     const double time_ms;
     const unsigned char priority;
     TalkieDevice * const talkie_device = nullptr;
-    std::vector<unsigned char> talkie_message;  // Replaces midi_message[3]
+    std::vector<unsigned char> talkie_message;  // Replaces talkie_message[3]
     // Auxiliary variable for the final playing loop!!
     double delay_time_ms = -1;
 
@@ -329,11 +329,11 @@ public:
     { }
 
     // Pin constructor
-    TalkiePin(double time_milliseconds, TalkieDevice* midi_device,
-        const std::vector<unsigned char>& json_midi_message, const unsigned char priority = 0xFF)
+    TalkiePin(double time_milliseconds, TalkieDevice* talkie_device,
+        const std::vector<unsigned char>& json_talkie_message, const unsigned char priority = 0xFF)
             : time_ms(time_milliseconds),
-            talkie_device(midi_device),
-            talkie_message(json_midi_message),    // Directly initialize midi_message
+            talkie_device(talkie_device),
+            talkie_message(json_talkie_message),    // Directly initialize talkie_message
             priority(priority)
         { }
 
@@ -341,7 +341,7 @@ public:
     TalkiePin(const TalkiePin& other)
         : time_ms(other.time_ms),                     // Copy the time_ms
           talkie_device(other.talkie_device),             // Copy the pointer to the TalkieDevice
-          talkie_message(other.talkie_message),           // Copy the midi_message vector
+          talkie_message(other.talkie_message),           // Copy the talkie_message vector
           priority(other.priority),                   // Copy the priority
           delay_time_ms(other.delay_time_ms),         // Copy the delay_time_ms
           level(other.level)                          // Copy the level
@@ -528,4 +528,4 @@ void highResolutionSleep(long long microseconds);
 int PlayList(const char* json_str, bool verbose = false);
 
 
-#endif // MIDI_JSON_PLAYER_HPP
+#endif // JSON_TALKIE_PLAYER_HPP
