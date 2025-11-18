@@ -87,6 +87,27 @@ bool TalkieDevice::openPort() {
             unavailable_device = true;
             error.printMessage();
         }
+
+
+        try {
+            // Server address parameters
+            memset(&server_addr, 0, sizeof(server_addr));
+            server_addr.sin_family = AF_INET;
+            server_addr.sin_port = htons(12345);  // Destination port
+            server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  // Destination IP address
+
+            // Create UDP socket
+            if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+                if (verbose) std::cerr << "Failed to create socket\n";
+                return 1;
+            }
+            opened_port = true;
+
+        } catch (RtMidiError &error) {
+            unavailable_device = true;
+            error.printMessage();
+        }
+
     }
     return opened_port;
 }
@@ -94,6 +115,10 @@ bool TalkieDevice::openPort() {
 void TalkieDevice::closePort() {
     if (opened_port) {
         midiOut.closePort();
+
+        // Close Socket
+        close(sockfd);
+
         opened_port = false;
         if (verbose) std::cout << "   " << name;
     }

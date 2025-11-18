@@ -41,6 +41,7 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
     #include <Windows.h>
     #include <processthreadsapi.h> // For SetProcessInformation
     #pragma comment(lib, "ws2_32.lib")
+    #define close closesocket   // Compatible with Linux naming
 #else
     #include <pthread.h>
     #include <time.h>
@@ -463,6 +464,9 @@ class TalkieDevice {
         const bool verbose;
         bool opened_port = false;
         bool unavailable_device = false;
+        // Socket variables
+        int sockfd;
+        struct sockaddr_in server_addr;
     
     public:
     
