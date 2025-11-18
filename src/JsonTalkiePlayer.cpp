@@ -332,7 +332,7 @@ int PlayList(const char* json_str, bool verbose) {
                 MidiDevice *last_called_midi_device = nullptr;
 
 
-                TalkieDevice *last_talkie_device = nullptr;
+                TalkieDevice *talkie_device = nullptr;
 
                 for (auto jsonElement : jsonFileContent)
                 {
@@ -353,18 +353,22 @@ int PlayList(const char* json_str, bool verbose) {
                         if (json_talkie_message["t"].is_string()) {
                             std::string name = json_talkie_message["t"].get<std::string>();
 
-
-                            auto device = devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
-                            last_talkie_device = &device.first->second; // Get pointer to stored object
+                            auto device_it = devices_by_name.find(name);  // Use iterator, not device
+                            if (device_it != devices_by_name.end()) {
+                                talkie_device = &device_it->second;  // Use iterator directly
+                            } else {
+                                auto device = devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
+                                talkie_device = &device.first->second; // Get pointer to stored object
+                            }
                         } else if (json_talkie_message["t"].is_number()) {
                             uint8_t channel = json_talkie_message["t"].get<uint8_t>();
 
                             auto device_it = devices_by_channel.find(channel);  // Use iterator, not device
                             if (device_it != devices_by_channel.end()) {
-                                last_talkie_device = &device_it->second;  // Use iterator directly
+                                talkie_device = &device_it->second;  // Use iterator directly
                             } else {
                                 auto device = devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
-                                last_talkie_device = &device.first->second; // Get pointer to stored object
+                                talkie_device = &device.first->second; // Get pointer to stored object
                             }
                         } else {
                             continue;
@@ -372,7 +376,7 @@ int PlayList(const char* json_str, bool verbose) {
 
 
                         const std::string talkie_message = encode(json_talkie_message);
-                        talkieToProcess.push_back( TalkiePin(time_milliseconds, last_talkie_device, talkie_message) );
+                        talkieToProcess.push_back( TalkiePin(time_milliseconds, talkie_device, talkie_message) );
                         play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
                         play_reporting.total_validated++;
 
