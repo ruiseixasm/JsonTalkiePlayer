@@ -14,8 +14,8 @@ https://github.com/ruiseixasm/JsonMidiCreator
 https://github.com/ruiseixasm/JsonTalkiePlayer
 */
 // Compile as: g++ -shared -fPIC -o JsonTalkiePlayer.so src/JsonTalkiePlayer.cpp -I/single_include/nlohmann -I/include -I/src
-#ifndef MIDI_JSON_PLAYER_CTYPES_HPP
-#define MIDI_JSON_PLAYER_CTYPES_HPP
+#ifndef JSON_TALKIE_PLAYER_CTYPES_HPP
+#define JSON_TALKIE_PLAYER_CTYPES_HPP
 
 #include "JsonTalkiePlayer.hpp"
 
@@ -30,4 +30,4 @@ extern "C" {    // Needed for Python ctypes
     DLL_EXPORT int add_ctypes(int a, int b);
 }
 
-#endif // MIDI_JSON_PLAYER_CTYPES_HPP
+#endif // JSON_TALKIE_PLAYER_CTYPES_HPP
