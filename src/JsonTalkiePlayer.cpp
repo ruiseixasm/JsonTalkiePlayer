@@ -1,5 +1,5 @@
 /*
-JsonTalkiePlayer - Json Midi Player is intended to be used
+JsonTalkiePlayer - Json Talkie Player is intended to be used
 in conjugation with the Json Midi Creator to Play its composed Elements
 Original Copyright (c) 2025 Rui Seixas Monteiro. All right reserved.
 This library is free software; you can redistribute it and/or
