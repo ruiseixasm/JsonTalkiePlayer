@@ -411,7 +411,7 @@ class TalkieDevice {
     public:
         TalkieDevice(int port, bool verbose = false)
                     : target_port(port), verbose(verbose) { }
-        ~TalkieDevice() { closePort(); }
+        ~TalkieDevice() { closeSocket(); }
     
         // Move constructor
         TalkieDevice(TalkieDevice &&other) noexcept :
@@ -430,10 +430,10 @@ class TalkieDevice {
             return *this;
         }
     
-        bool openPort();
-        void setTarget(const std::string& ip);
-        void closePort();
-        bool hasPortOpen() const;
+        bool initializeSocket();
+        void setTargetIP(const std::string& ip);
+        void closeSocket();
+        bool hasSocketOpen() const;
         unsigned int getDevicePort() const;
         bool sendMessage(const std::string& talkie_message);
     };

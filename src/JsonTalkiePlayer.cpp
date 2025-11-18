@@ -77,7 +77,7 @@ void TalkiePin::pluckTooth() {
 
 
 // TalkieDevice methods definition
-bool TalkieDevice::openPort() {
+bool TalkieDevice::initializeSocket() {
     if (!opened_port && !unavailable_device) {
         try {
             // Server address parameters
@@ -103,7 +103,7 @@ bool TalkieDevice::openPort() {
 }
 
 
-void TalkieDevice::setTarget(const std::string& ip) {
+void TalkieDevice::setTargetIP(const std::string& ip) {
     target_ip = ip;
     
     // If socket exists, we need to update server_addr
@@ -118,7 +118,7 @@ void TalkieDevice::setTarget(const std::string& ip) {
 }
 
 
-void TalkieDevice::closePort() {
+void TalkieDevice::closeSocket() {
     if (opened_port) {
         // Close Socket
         close(sockfd);
@@ -126,7 +126,7 @@ void TalkieDevice::closePort() {
     }
 }
 
-bool TalkieDevice::hasPortOpen() const {
+bool TalkieDevice::hasSocketOpen() const {
     return opened_port;
 }
 
