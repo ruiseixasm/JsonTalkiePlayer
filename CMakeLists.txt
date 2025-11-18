@@ -30,7 +30,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(include single_include)
 
 # Add main.cpp explicitly
-set(STATIC_SOURCES src/JsonTalkiePlayer.cpp src/RtMidi.cpp)
+set(STATIC_SOURCES src/JsonTalkiePlayer.cpp)
 
 # Create the shared library
 add_library(JsonTalkiePlayer_library STATIC ${STATIC_SOURCES})
