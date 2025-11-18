@@ -331,6 +331,9 @@ int PlayList(const char* json_str, bool verbose) {
                 // Keeps the last called device in the JsonTalkiePlayer file
                 MidiDevice *last_called_midi_device = nullptr;
 
+
+                TalkieDevice *last_talkie_device = nullptr;
+
                 for (auto jsonElement : jsonFileContent)
                 {
 
@@ -349,19 +352,23 @@ int PlayList(const char* json_str, bool verbose) {
 
                         if (json_talkie_message["t"].is_string()) {
                             std::string name = json_talkie_message["t"].get<std::string>();
-                            devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
+                            auto device = devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
+                            last_talkie_device = &device.first->second; // Get pointer to stored object
                         } else if (json_talkie_message["t"].is_number()) {
                             uint8_t channel = json_talkie_message["t"].get<uint8_t>();
-                            devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
+                            auto device = devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
+                            last_talkie_device = &device.first->second; // Get pointer to stored object
                         } else {
                             continue;
                         }
 
 
-
-                        // talkieToProcess.push_back( TalkiePin(time_milliseconds, last_called_midi_device, json_talkie_message) );
+                        const std::string talkie_message = encode(json_talkie_message);
+                        talkieToProcess.push_back( TalkiePin(time_milliseconds, last_talkie_device, talkie_message) );
                         play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
                         play_reporting.total_validated++;
+
+
                         // TO BE IMPLEMENTED !!!
 
 
