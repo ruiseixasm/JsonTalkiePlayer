@@ -26,21 +26,32 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #include <cstdlib>
 #include <thread>               // Include for std::this_thread::sleep_for
 #include <chrono>               // Include for std::chrono::seconds
-#include <nlohmann/json.hpp>    // Include the JSON library
-#include "RtMidi.h"             // Includes the necessary MIDI library
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
 #include <iomanip>              // For std::fixed and std::setprecision
+// Needed for UDP sockets
+#include <cstring>
 
 #ifdef _WIN32
     #define NOMINMAX    // disables the definition of min and max macros.
+    #define WIN32_LEAN_AND_MEAN
+    // #include <winsock2.h>
+    // #include <ws2tcpip.h>
     #include <Windows.h>
     #include <processthreadsapi.h> // For SetProcessInformation
+    #pragma comment(lib, "ws2_32.lib")
 #else
     #include <pthread.h>
     #include <time.h>
+    #include <arpa/inet.h>
+    #include <unistd.h>
 #endif
+
+// External libraries
+#include <nlohmann/json.hpp>    // Include the JSON library
+#include "RtMidi.h"             // Includes the necessary MIDI library
+
 
 // #define DEBUGGING true
 #define FILE_TYPE "Json Midi Player"
