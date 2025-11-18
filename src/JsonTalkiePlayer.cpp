@@ -372,17 +372,17 @@ int PlayList(const char* json_str, bool verbose) {
             // Where the reporting is finally done
             if (verbose) std::cout << "Data stats reporting:" << std::endl;
             if (verbose) std::cout << "\tMidi Messages processing time (ms):       " << std::setw(10) << play_reporting.json_processing << std::endl;
-            if (verbose) std::cout << "\tTotal generated Midi Messages (included): " << std::setw(10) << play_reporting.total_generated << std::endl;
-            if (verbose) std::cout << "\tTotal validated Midi Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
-            if (verbose) std::cout << "\tTotal incorrect Midi Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
-            if (verbose) std::cout << "\tTotal redundant Midi Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
-            if (verbose) std::cout << "\tTotal resultant Midi Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
+            if (verbose) std::cout << "\tTotal generated Talkie Messages (included): " << std::setw(10) << play_reporting.total_generated << std::endl;
+            if (verbose) std::cout << "\tTotal validated Talkie Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
+            if (verbose) std::cout << "\tTotal incorrect Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
+            if (verbose) std::cout << "\tTotal redundant Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
+            if (verbose) std::cout << "\tTotal resultant Talkie Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
 
             
         } else {
 
             //
-            // Where the existing Midi messages are sorted by time and other parameters
+            // Where the existing Talkie messages are sorted by time and other parameters
             //
 
             // Two levels sorting criteria
@@ -415,11 +415,11 @@ int PlayList(const char* json_str, bool verbose) {
             // Where the reporting is finally done
             if (verbose) std::cout << "Data stats reporting:" << std::endl;
             if (verbose) std::cout << "\tMidi Messages processing time (ms):       " << std::setw(10) << play_reporting.json_processing << std::endl;
-            if (verbose) std::cout << "\tTotal generated Midi Messages (included): " << std::setw(10) << play_reporting.total_generated << std::endl;
-            if (verbose) std::cout << "\tTotal validated Midi Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
-            if (verbose) std::cout << "\tTotal incorrect Midi Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
-            if (verbose) std::cout << "\tTotal redundant Midi Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
-            if (verbose) std::cout << "\tTotal resultant Midi Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
+            if (verbose) std::cout << "\tTotal generated Talkie Messages (included): " << std::setw(10) << play_reporting.total_generated << std::endl;
+            if (verbose) std::cout << "\tTotal validated Talkie Messages (accepted): " << std::setw(10) << play_reporting.total_validated << std::endl;
+            if (verbose) std::cout << "\tTotal incorrect Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_incorrect << std::endl;
+            if (verbose) std::cout << "\tTotal redundant Talkie Messages (excluded): " << std::setw(10) << play_reporting.total_redundant << std::endl;
+            if (verbose) std::cout << "\tTotal resultant Talkie Messages (included): " << std::setw(10) << talkieToProcess.size() << std::endl;
 
             TalkiePin *last_pin = &talkieToProcess.back();
             size_t duration_time_sec = std::round(last_pin->getTime() / 1000);
@@ -446,7 +446,7 @@ int PlayList(const char* json_str, bool verbose) {
                 highResolutionSleep(sleep_time_us);  // Sleep for x microseconds
 
                 auto pluck_time = std::chrono::high_resolution_clock::now() - playing_start;
-                talkie_pin.pluckTooth();  // as soon as possible! <----- Midi Send
+                talkie_pin.pluckTooth();  // as soon as possible! <----- Talkie Send
 
                 auto pluck_time_us = static_cast<double>(
                     std::chrono::duration_cast<std::chrono::microseconds>(pluck_time).count()
@@ -504,7 +504,7 @@ int PlayList(const char* json_str, bool verbose) {
     }
 
     // Where the reporting is finally done
-    if (verbose) std::cout << std::endl << "Midi stats reporting:" << std::endl;
+    if (verbose) std::cout << std::endl << "Talkie stats reporting:" << std::endl;
     // Set fixed floating-point notation and precision
     if (verbose) std::cout << std::fixed << std::setprecision(3);
     if (verbose) std::cout << "\tTotal drag (ms):      " << std::setw(34) << play_reporting.total_drag << " \\" << std::endl;
