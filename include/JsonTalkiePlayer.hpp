@@ -481,7 +481,7 @@ class TalkieDevice {
         ~TalkieDevice() { closePort(); }
     
         // Move constructor
-        TalkieDevice(TalkieDevice &&other) noexcept : midiOut(std::move(other.midiOut)),
+        TalkieDevice(TalkieDevice &&other) noexcept :
                 name(std::move(other.name)), port(other.port), verbose(other.verbose),
                 opened_port(other.opened_port) { }
     
