@@ -94,7 +94,7 @@ bool TalkieDevice::openPort() {
             memset(&server_addr, 0, sizeof(server_addr));
             server_addr.sin_family = AF_INET;
             server_addr.sin_port = htons(5005);  // 5005 is the default port of JsonTalkie
-            server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  // Destination IP address
+            server_addr.sin_addr.s_addr = inet_addr("255.255.255.255");  // Destination Broadcast IP address
 
             // Create UDP socket
             if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
