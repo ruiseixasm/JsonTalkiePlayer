@@ -499,6 +499,14 @@ int PlayList(const char* json_str, bool verbose) {
                     play_reporting.total_drag += delay_time_ms - DRAG_DURATION_MS;  // Drag isn't Delay
             }
 
+            #ifdef DEBUGGING
+            debugging_now = std::chrono::high_resolution_clock::now();
+            completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
+            completion_time_us = completion_time.count();
+            std::cout << "PLAYING FULLY PROCESSED IN: " << completion_time_us << " microseconds" << std::endl;
+            debugging_last = std::chrono::high_resolution_clock::now();
+            #endif
+
 
         }
 
@@ -588,14 +596,6 @@ int PlayList(const char* json_str, bool verbose) {
                 if (delay_time_ms > DRAG_DURATION_MS)
                     play_reporting.total_drag += delay_time_ms - DRAG_DURATION_MS;  // Drag isn't Delay
             }
-
-            #ifdef DEBUGGING
-            debugging_now = std::chrono::high_resolution_clock::now();
-            completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
-            completion_time_us = completion_time.count();
-            std::cout << "PLAYING FULLY PROCESSED IN: " << completion_time_us << " microseconds" << std::endl;
-            debugging_last = std::chrono::high_resolution_clock::now();
-            #endif
 
             //
             // Where the final Statistics are calculated
