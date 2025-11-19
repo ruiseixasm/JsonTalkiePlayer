@@ -252,7 +252,7 @@ int PlayList(const char* json_str, bool verbose) {
                 {
 
                     // Talkie message is just message
-                    if (jsonElement.contains("time_ms") && jsonElement.contains("port") && jsonElement.contains("message")) {
+                    if (jsonElement.contains("port") && jsonElement.contains("time_ms") && jsonElement.contains("message")) {
 
                         double time_milliseconds = jsonElement["time_ms"];
                         int target_port = jsonElement["port"];
