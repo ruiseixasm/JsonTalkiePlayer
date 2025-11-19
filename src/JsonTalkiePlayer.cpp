@@ -16,13 +16,6 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #include "JsonTalkiePlayer.hpp"
 
 
-
-
-
-
-
-
-
 // TalkiePin methods definition
 void TalkiePin::pluckTooth() {
     if (talkie_device != nullptr)
@@ -55,7 +48,7 @@ bool TalkieDevice::initializeSocket() {
     }
     
     socket_initialized = true;
-    std::cout << "Socket initialized for " << target_ip << ":" << target_port << "\n";
+    if (verbose) std::cout << "Socket initialized for " << target_ip << ":" << target_port << "\n";
     return true;
 }
 
@@ -70,7 +63,7 @@ void TalkieDevice::setTargetIP(const std::string& ip) {
         server_addr.sin_port = htons(target_port);
         inet_pton(AF_INET, target_ip.c_str(), &server_addr.sin_addr);
         
-        std::cout << "Target updated to " << target_ip << ":" << target_port << "\n";
+        if (verbose) std::cout << "Target updated to " << target_ip << ":" << target_port << "\n";
     }
 }
 
@@ -95,11 +88,11 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
     // Send message to server
     if (sendto(sockfd, talkie_message.c_str(), message_len, 0, 
                (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        std::cerr << "Failed to send message: " << strerror(errno) << "\n";
+        std::cerr << "Failed to send message: " << talkie_message << "\n";
         return false;
     }
 
-    std::cout << "Message sent successfully\n";
+    if (verbose) std::cout << "Message sent successfully\n";
     return true;
 }
 
@@ -208,8 +201,6 @@ int PlayList(const char* json_str, bool verbose) {
         //
         // Where the JSON content is processed and added up the Pluck Talkie messages
         //
-
-        if (verbose) std::cout << "Devices connected:    ";
 
         auto data_processing_start = std::chrono::high_resolution_clock::now();
 
@@ -443,11 +434,6 @@ int PlayList(const char* json_str, bool verbose) {
             }
 
         }
-
-
-        if (verbose) std::cout << "Devices disconnected: ";
-        // Exiting devices scope automatically disconnects them
-
 
     }
 
