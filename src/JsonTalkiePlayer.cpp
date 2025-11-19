@@ -279,11 +279,12 @@ int PlayList(const char* json_str, bool verbose) {
                             continue;
                         }
 
-
-                        const std::string talkie_message = encode(json_talkie_message);
-                        talkieToProcess.push_back( TalkiePin(time_milliseconds, talkie_device, talkie_message) );
-                        play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
-                        play_reporting.total_validated++;
+                        if (talkie_device->initializeSocket()) {
+                            const std::string talkie_message = encode(json_talkie_message);
+                            talkieToProcess.push_back( TalkiePin(time_milliseconds, talkie_device, talkie_message) );
+                            play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
+                            play_reporting.total_validated++;
+                        }
 
                     }
                 }
