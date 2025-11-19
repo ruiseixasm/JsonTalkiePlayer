@@ -29,7 +29,15 @@ bool TalkieDevice::initializeSocket() {
         return true;  // Socket already exists
     }
     
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    // MUST be called before socket()
+    WSADATA wsaData;
+    int wsa = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (wsa != 0) {
+        std::cerr << "WSAStartup failed: " << wsa << "\n";
+        return false;
+    }
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sockfd < 0) {
         std::cerr << "Failed to create socket\n";
         return false;
@@ -72,6 +80,7 @@ void TalkieDevice::closeSocket() {
     if (socket_initialized) {
         // Close Socket
         close(sockfd);
+        sockfd = -1;
         socket_initialized = false;
     }
 }

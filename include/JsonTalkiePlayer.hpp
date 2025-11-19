@@ -182,14 +182,11 @@ class TalkieDevice {
         std::string getTargetIp() const { return target_ip; }
         int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
-    };
-    
-
-    
-
+};
 
 
     
+
 
 // Declare the function in the header file
 void disableBackgroundThrottling();
