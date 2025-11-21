@@ -150,9 +150,6 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
         return false;
     }
 
-    if (verbose) {
-        std::cout << "Message sent successfully (" << sent << " bytes)\n";
-    }
     return true;
 }
 
