@@ -216,7 +216,7 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
 
     } catch (const std::exception& e) {
 
-        std::cerr << "Fatal error in main loop: " << e.what() << std::endl;
+        std::cerr << "Fatal error while sending Tempo: " << e.what() << std::endl;
         return false;
     }
 
@@ -278,9 +278,6 @@ int PlayList(const char* json_str, bool verbose) {
         std::list<TalkiePin> talkieToProcess;
         std::list<TalkiePin> talkieProcessed;
 
-        int bpm_n = 0;
-        int bpm_d = 0;
-
         #ifdef DEBUGGING
         debugging_now = std::chrono::high_resolution_clock::now();
         auto completion_time = std::chrono::duration_cast<std::chrono::microseconds>(debugging_now - debugging_last);
@@ -330,9 +327,11 @@ int PlayList(const char* json_str, bool verbose) {
 
                 TalkieDevice *talkie_device = nullptr;
 
+                int bpm_n = 0;
+                int bpm_d = 0;
+
                 for (auto jsonElement : jsonFileContent)
                 {
-
                     // Talkie message is just message
                     if (jsonElement.contains("port") && jsonElement.contains("time_ms") && jsonElement.contains("message")) {
 
@@ -368,6 +367,10 @@ int PlayList(const char* json_str, bool verbose) {
                             } else {
                                 auto device = devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
+                                // New channel found, needs to set its tempo right away
+                                if (bpm_d != 0) {
+                                    talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
+                                }
                             }
                         } else {
                             continue;
