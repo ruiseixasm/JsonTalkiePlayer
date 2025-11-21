@@ -267,9 +267,12 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
     };
     PlayReporting play_reporting;
 
+    if (verbose) {
+        std::cout << "JsonTalkiePlayer version: " << VERSION << std::endl;
+        std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
+    }
     
-    if (verbose) std::cout << "JsonTalkiePlayer version: " << VERSION << std::endl;
-
+    
     // Where the playing happens
     {
         std::unordered_map<std::string, TalkieDevice> devices_by_name;

@@ -72,9 +72,6 @@ int main(int argc, char *argv[]) {
                         std::cerr << "Error: Delay must be a non-negative integer" << std::endl;
                         return 1;
                     }
-                    if (verbose) {
-                        if (verbose) std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
-                    }
                 } catch (const std::exception& e) {
                     std::cerr << "Error: Invalid delay value '" << optarg << "'. Must be an integer." << std::endl;
                     return 1;

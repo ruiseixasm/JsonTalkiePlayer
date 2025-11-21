@@ -26,7 +26,7 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #endif
 
 extern "C" {    // Needed for Python ctypes
-    DLL_EXPORT int PlayList_ctypes(const char* json_str, int verbose);
+    DLL_EXPORT int PlayList_ctypes(const char* json_str, const int delay_ms, int verbose);
     DLL_EXPORT int add_ctypes(int a, int b);
 }
 
