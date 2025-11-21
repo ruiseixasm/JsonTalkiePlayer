@@ -46,7 +46,11 @@ bool TalkieDevice::initializeSocket() {
     BOOL bc = TRUE;
     if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&bc, sizeof(bc)) < 0) {
         std::cerr << "Failed to enable broadcast: " << WSAGetLastError() << "\n";
+#ifdef _WIN32
         closesocket(sockfd);
+#else
+        close(sockfd);
+#endif
         return false;
     }
 
@@ -58,7 +62,11 @@ bool TalkieDevice::initializeSocket() {
 
     if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) == SOCKET_ERROR) {
         std::cerr << "Bind failed: " << WSAGetLastError() << "\n";
+#ifdef _WIN32
         closesocket(sockfd);
+#else
+        close(sockfd);
+#endif
         return false;
     }
 
