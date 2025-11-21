@@ -15,8 +15,8 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 */
 #include "JsonTalkiePlayer_ctypes.hpp"
 
-int PlayList_ctypes(const char* json_str, int verbose) {
-    return PlayList(json_str, verbose);
+int PlayList_ctypes(const char* json_str, const int delay_ms, int verbose) {
+    return PlayList(json_str, delay_ms, verbose);
 }
 
 int add_ctypes(int a, int b) {

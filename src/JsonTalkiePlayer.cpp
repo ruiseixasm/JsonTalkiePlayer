@@ -240,7 +240,7 @@ void setRealTimeScheduling() {
 
 
 
-int PlayList(const char* json_str, bool verbose) {
+int PlayList(const char* json_str, const int delay_ms, bool verbose) {
     
     disableBackgroundThrottling();
 

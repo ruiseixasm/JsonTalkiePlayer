@@ -37,6 +37,7 @@ void printUsage(const char *programName) {
     std::cout << "Usage: " << programName << " [options] input_file_1.json [input_file_2.json]\n"
               << "Options:\n"
               << "  -h, --help       Show this help message and exit\n"
+              << "  -d, --delay      Sets a delay in milliseconds\n"
               << "  -v, --verbose    Enable verbose mode\n"
               << "  -V, --version    Prints the current version number\n\n"
               << "More info here: https://github.com/ruiseixasm/JsonTalkiePlayer\n\n";
@@ -45,10 +46,12 @@ void printUsage(const char *programName) {
 int main(int argc, char *argv[]) {
 
     int verbose = 0;
+    int delay_ms = 0;  // Default delay value
     int option_index = 0;
 
     struct option long_options[] = {
         {"help",    no_argument,       nullptr, 'h'},
+        {"delay",   required_argument, nullptr, 'd'},
         {"verbose", no_argument,       nullptr, 'v'},
         {"version", no_argument,       nullptr, 'V'}, // New option for version
         {nullptr,   0,                 nullptr,  0 }
@@ -62,6 +65,21 @@ int main(int argc, char *argv[]) {
             case 'h':
                 printUsage(argv[0]);
                 return 2;   // avoids the execution of any file
+            case 'd':
+                try {
+                    delay_ms = std::stoi(optarg);  // Parse delay as integer
+                    if (delay_ms < 0) {
+                        std::cerr << "Error: Delay must be a non-negative integer" << std::endl;
+                        return 1;
+                    }
+                    if (verbose) {
+                        std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "Error: Invalid delay value '" << optarg << "'. Must be an integer." << std::endl;
+                    return 1;
+                }
+                break;
             case 'v':
                 verbose = 1;
                 break;
@@ -104,5 +122,5 @@ int main(int argc, char *argv[]) {
     // Replace last "," with a "]"
     json_files_list.back() = ']';
 
-    return PlayList(json_files_list.c_str(), verbose);
+    return PlayList(json_files_list.c_str(), delay_ms, verbose);
 }

@@ -205,7 +205,7 @@ void disableBackgroundThrottling();
 
 void setRealTimeScheduling();
 void highResolutionSleep(long long microseconds);
-int PlayList(const char* json_str, bool verbose = false);
+int PlayList(const char* json_str, const int delay_ms, bool verbose = false);
 
 
 #endif // JSON_TALKIE_PLAYER_HPP
