@@ -225,6 +225,61 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
 
 
 
+// Check if there are any messages waiting (non-blocking check)
+bool TalkieDevice::hasMessages() {
+    if (sockfd < 0) return false;
+
+    // Use select to check if data is available without blocking
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0; // Return immediately
+
+    int result = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
+    return result > 0 && FD_ISSET(sockfd, &readfds);
+}
+
+// Check for and receive any incoming messages
+std::vector<std::string> TalkieDevice::receiveMessages() {
+    std::vector<std::string> messages;
+    if (sockfd < 0) return messages;
+
+    char buffer[1024];
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+
+    // Keep reading until no more messages are available
+    while (true) {
+        memset(buffer, 0, sizeof(buffer));
+        int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
+                                (struct sockaddr*)&client_addr, &client_len);
+
+        if (received > 0) {
+            buffer[received] = '\0';
+            char client_ip[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+            
+            std::string message = std::string(client_ip) + ": " + buffer;
+            messages.push_back(message);
+            
+            std::cout << "Received: " << message << std::endl;
+        } else {
+            // No more data available (non-blocking would return immediately)
+            break;
+        }
+    }
+
+    return messages;
+}
+
+
+
+
+
+
 // Function to set real-time scheduling
 void setRealTimeScheduling() {
 #ifdef _WIN32
