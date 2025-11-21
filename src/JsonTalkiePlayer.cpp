@@ -225,6 +225,10 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
 
 
 
+// Define the static members
+std::unordered_map<std::string, TalkieDevice> TalkieDevice::devices_by_name;
+std::unordered_map<uint8_t, TalkieDevice> TalkieDevice::devices_by_channel;
+
 // Check if there are any messages waiting (non-blocking check)
 bool TalkieDevice::hasMessages() {
     if (sockfd < 0) return false;
@@ -330,9 +334,6 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
     
     // Where the playing happens
     {
-        std::unordered_map<std::string, TalkieDevice> devices_by_name;
-        std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
-                
         std::list<TalkiePin> talkieToProcess;
         std::list<TalkiePin> talkieProcessed;
 
@@ -405,11 +406,11 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                         if (json_talkie_message["t"].is_string()) {
                             std::string name = json_talkie_message["t"].get<std::string>();
 
-                            auto device_it = devices_by_name.find(name);  // Use iterator, not device
-                            if (device_it != devices_by_name.end()) {
+                            auto device_it = TalkieDevice::devices_by_name.find(name);  // Use iterator, not device
+                            if (device_it != TalkieDevice::devices_by_name.end()) {
                                 talkie_device = &device_it->second;  // Use iterator directly
                             } else {
-                                auto device = devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
+                                auto device = TalkieDevice::devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
                                 // New device found, needs to set its tempo right away
                                 if (bpm_d != 0 && talkie_device->initializeSocket()) {
@@ -419,11 +420,11 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                         } else if (json_talkie_message["t"].is_number()) {
                             uint8_t channel = json_talkie_message["t"].get<uint8_t>();
 
-                            auto device_it = devices_by_channel.find(channel);  // Use iterator, not device
-                            if (device_it != devices_by_channel.end()) {
+                            auto device_it = TalkieDevice::devices_by_channel.find(channel);  // Use iterator, not device
+                            if (device_it != TalkieDevice::devices_by_channel.end()) {
                                 talkie_device = &device_it->second;  // Use iterator directly
                             } else {
-                                auto device = devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
+                                auto device = TalkieDevice::devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
                                 // New channel found, needs to set its tempo right away
                                 if (bpm_d != 0 && talkie_device->initializeSocket()) {

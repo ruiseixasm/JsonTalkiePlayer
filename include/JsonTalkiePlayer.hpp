@@ -165,6 +165,11 @@ public:
 
 
 class TalkieDevice {
+    public:
+    
+    static std::unordered_map<std::string, TalkieDevice> devices_by_name;
+    static std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
+                
     private:
         const bool verbose;
         // Socket variables
