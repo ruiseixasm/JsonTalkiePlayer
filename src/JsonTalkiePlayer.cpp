@@ -203,12 +203,12 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
         json_talkie_tempo["m"] = MessageCode::set;
         json_talkie_tempo["i"] = 0;
 
-        json_talkie_tempo["name"] = "bpm_n";
+        json_talkie_tempo["n"] = "bpm_n";
         json_talkie_tempo["v"] = bpm_n;
         json_talkie_tempo["c"] = 0;
         json_talkie_tempo["c"] = calculate_checksum(encode(json_talkie_tempo));
         this->sendMessage(encode(json_talkie_tempo));
-        json_talkie_tempo["name"] = "bpm_d";
+        json_talkie_tempo["n"] = "bpm_d";
         json_talkie_tempo["v"] = bpm_d;
         json_talkie_tempo["c"] = 0;
         json_talkie_tempo["c"] = calculate_checksum(encode(json_talkie_tempo));
