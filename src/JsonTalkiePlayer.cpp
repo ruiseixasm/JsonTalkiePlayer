@@ -59,6 +59,7 @@ static uint16_t calculate_checksum(const std::string& data) {
 std::unordered_map<std::string, TalkieDevice> TalkieDevice::devices_by_name;
 std::unordered_map<uint8_t, TalkieDevice> TalkieDevice::devices_by_channel;
 
+bool TalkieDevice::socket_initialized = false;
 int TalkieDevice::sockfd;
 struct sockaddr_in TalkieDevice::server_addr;
 

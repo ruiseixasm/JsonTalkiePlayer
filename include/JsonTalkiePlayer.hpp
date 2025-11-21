@@ -171,13 +171,13 @@ class TalkieDevice {
     static std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
                 
     private:
-        const bool verbose;
-        // Socket variables
-        bool socket_initialized = false;
-        std::string target_ip = "255.255.255.255";
-        int target_port;
+        static bool socket_initialized;
         static int sockfd;
         static struct sockaddr_in server_addr;
+        const bool verbose;
+        // Socket variables
+        std::string target_ip = "255.255.255.255";
+        int target_port;
     
         
     public:
