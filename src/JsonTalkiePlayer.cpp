@@ -354,7 +354,7 @@ int PlayList(const char* json_str, bool verbose) {
                                 auto device = devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
                                 // New device found, needs to set its tempo right away
-                                if (bpm_d != 0) {
+                                if (bpm_d != 0 && talkie_device->initializeSocket()) {
                                     talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
                                 }
                             }
@@ -368,7 +368,7 @@ int PlayList(const char* json_str, bool verbose) {
                                 auto device = devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
                                 // New channel found, needs to set its tempo right away
-                                if (bpm_d != 0) {
+                                if (bpm_d != 0 && talkie_device->initializeSocket()) {
                                     talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
                                 }
                             }
