@@ -16,6 +16,47 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #include "JsonTalkiePlayer.hpp"
 
 
+
+
+double get_time_ms(int minutes_numerator, int minutes_denominator) {
+
+    double milliseconds = minutes_numerator * 60000.0 / minutes_denominator;
+    // Round to three decimal places
+    return std::round(milliseconds * 1000.0) / 1000.0;
+}
+
+
+static uint32_t message_id(const double time_milliseconds) {
+    return static_cast<uint32_t>(time_milliseconds);
+}
+
+
+static std::string encode(const nlohmann::json& message) {
+    return message.dump(); // Convert JSON to string
+}
+
+
+static uint16_t calculate_checksum(const std::string& data) {
+    uint16_t checksum = 0;
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data.c_str());
+    size_t len = data.length();
+    
+    for (size_t i = 0; i < len; i += 2) {
+        // Combine two bytes into 16-bit value
+        uint16_t chunk = bytes[i] << 8;
+        if (i + 1 < len) {
+            chunk |= bytes[i + 1];
+        }
+        checksum ^= chunk;
+    }
+    
+    return checksum & 0xFFFF;
+}
+
+
+
+
+
 // TalkiePin methods definition
 void TalkiePin::pluckTooth() {
     if (talkie_device != nullptr)
@@ -154,7 +195,33 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
 }
 
 
+bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d) {
 
+    try {
+
+        nlohmann::json json_talkie_tempo = json_talkie_message; // Does a copy
+        json_talkie_tempo["m"] = MessageCode::set;
+        json_talkie_tempo["i"] = 0;
+
+        json_talkie_tempo["name"] = "bpm_n";
+        json_talkie_tempo["v"] = bpm_n;
+        json_talkie_tempo["c"] = 0;
+        json_talkie_tempo["c"] = calculate_checksum(encode(json_talkie_tempo));
+        this->sendMessage(encode(json_talkie_tempo));
+        json_talkie_tempo["name"] = "bpm_d";
+        json_talkie_tempo["v"] = bpm_d;
+        json_talkie_tempo["c"] = 0;
+        json_talkie_tempo["c"] = calculate_checksum(encode(json_talkie_tempo));
+        this->sendMessage(encode(json_talkie_tempo));
+
+    } catch (const std::exception& e) {
+
+        std::cerr << "Fatal error in main loop: " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
 
 
 
@@ -172,41 +239,6 @@ void setRealTimeScheduling() {
 }
 
 
-
-double get_time_ms(int minutes_numerator, int minutes_denominator) {
-
-    double milliseconds = minutes_numerator * 60000.0 / minutes_denominator;
-    // Round to three decimal places
-    return std::round(milliseconds * 1000.0) / 1000.0;
-}
-
-
-static uint32_t message_id(const double time_milliseconds) {
-    return static_cast<uint32_t>(time_milliseconds);
-}
-
-
-static std::string encode(const nlohmann::json& message) {
-    return message.dump(); // Convert JSON to string
-}
-
-
-static uint16_t calculate_checksum(const std::string& data) {
-    uint16_t checksum = 0;
-    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data.c_str());
-    size_t len = data.length();
-    
-    for (size_t i = 0; i < len; i += 2) {
-        // Combine two bytes into 16-bit value
-        uint16_t chunk = bytes[i] << 8;
-        if (i + 1 < len) {
-            chunk |= bytes[i + 1];
-        }
-        checksum ^= chunk;
-    }
-    
-    return checksum & 0xFFFF;
-}
 
 int PlayList(const char* json_str, bool verbose) {
     
@@ -246,6 +278,8 @@ int PlayList(const char* json_str, bool verbose) {
         std::list<TalkiePin> talkieToProcess;
         std::list<TalkiePin> talkieProcessed;
 
+        int bpm_n = 0;
+        int bpm_d = 0;
 
         #ifdef DEBUGGING
         debugging_now = std::chrono::high_resolution_clock::now();
@@ -309,7 +343,6 @@ int PlayList(const char* json_str, bool verbose) {
                         json_talkie_message["c"] = 0;
                         json_talkie_message["c"] = calculate_checksum(encode(json_talkie_message));
                         
-
                         play_reporting.total_incorrect++;
 
                         if (json_talkie_message["t"].is_string()) {
@@ -321,6 +354,10 @@ int PlayList(const char* json_str, bool verbose) {
                             } else {
                                 auto device = devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
+                                // New device found, needs to set its tempo right away
+                                if (bpm_d != 0) {
+                                    talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
+                                }
                             }
                         } else if (json_talkie_message["t"].is_number()) {
                             uint8_t channel = json_talkie_message["t"].get<uint8_t>();
@@ -342,6 +379,12 @@ int PlayList(const char* json_str, bool verbose) {
                             play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
                             play_reporting.total_validated++;
                         }
+
+                    } else if (bpm_d == 0 && jsonElement.contains("tempo")) {
+
+                        nlohmann::json json_talkie_clock = jsonElement["tempo"];
+                        bpm_n = json_talkie_clock["bpm_numerator"];
+                        bpm_d = json_talkie_clock["bpm_denominator"];
 
                     }
                 }

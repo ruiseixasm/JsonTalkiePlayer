@@ -60,6 +60,17 @@ https://github.com/ruiseixasm/JsonTalkiePlayer
 #define DRAG_DURATION_MS (1000.0/((120/60)*24))
 
 
+enum MessageCode {
+    talk,
+    list,
+    run,
+    set,
+    get,
+    sys,
+    echo,
+    error,
+    channel
+};
 
     
 class TalkieDevice;
@@ -182,6 +193,7 @@ class TalkieDevice {
         std::string getTargetIp() const { return target_ip; }
         int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
+        bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);
 };
 
 
