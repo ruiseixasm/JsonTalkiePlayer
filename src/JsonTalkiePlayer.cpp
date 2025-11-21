@@ -55,6 +55,62 @@ static uint16_t calculate_checksum(const std::string& data) {
 
 
 
+
+bool JsonTalkiePlayer::initialize() {
+    // Create ONE socket
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    
+    // Enable broadcast once
+    int broadcast = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
+    
+    // Bind once
+    sockaddr_in local_addr{};
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_addr.s_addr = INADDR_ANY;
+    local_addr.sin_port = 0;  // Let OS choose port
+    bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr));
+    
+    return true;
+}
+
+void JsonTalkiePlayer::sendToDevice(const std::string& ip, int port, const std::string& message) {
+    sockaddr_in target{};
+    target.sin_family = AF_INET;
+    target.sin_port = htons(port);
+    inet_pton(AF_INET, ip.c_str(), &target.sin_addr);
+    
+    sendto(sockfd, message.c_str(), message.length(), 0,
+            (sockaddr*)&target, sizeof(target));
+    
+    if (verbose) std::cout << "Sent to " << ip << ":" << port << " - " << message << std::endl;
+}
+
+void JsonTalkiePlayer::sendBroadcast(int port, const std::string& message) {
+    sockaddr_in broadcast_addr{};
+    broadcast_addr.sin_family = AF_INET;
+    broadcast_addr.sin_port = htons(port);
+    broadcast_addr.sin_addr.s_addr = INADDR_BROADCAST;
+    
+    sendto(sockfd, message.c_str(), message.length(), 0,
+            (sockaddr*)&broadcast_addr, sizeof(broadcast_addr));
+    
+    if (verbose) std::cout << "Broadcast sent to port " << port << std::endl;
+}
+
+void JsonTalkiePlayer::closeSocket() {
+    if (socket_initialized) {
+        // Close Socket
+        close(sockfd);
+        sockfd = -1;
+        socket_initialized = false;
+    }
+}
+
+
+
+
+
 // Define the static members
 std::unordered_map<std::string, TalkieDevice> TalkieDevice::devices_by_name;
 std::unordered_map<uint8_t, TalkieDevice> TalkieDevice::devices_by_channel;

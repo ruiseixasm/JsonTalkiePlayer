@@ -72,7 +72,25 @@ enum MessageCode {
     channel
 };
 
+
+class JsonTalkiePlayer {
+private:
+    const bool verbose;
+    int sockfd = -1;  // ONE socket for everything
+    bool socket_initialized = false;
     
+public:
+    JsonTalkiePlayer(bool verbose = false) : verbose(verbose) { }
+    ~JsonTalkiePlayer() { closeSocket(); }
+    bool initialize();
+    void sendToDevice(const std::string& ip, int port, const std::string& message);
+    void sendBroadcast(int port, const std::string& message);
+    void closeSocket();
+};
+
+
+
+
 class TalkieDevice;
 
 
