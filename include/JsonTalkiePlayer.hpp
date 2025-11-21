@@ -176,8 +176,8 @@ class TalkieDevice {
         bool socket_initialized = false;
         std::string target_ip = "255.255.255.255";
         int target_port;
-        int sockfd;
-        struct sockaddr_in server_addr;
+        static int sockfd;
+        static struct sockaddr_in server_addr;
     
         
     public:
@@ -201,9 +201,9 @@ class TalkieDevice {
         bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);
         
         // Check if there are any messages waiting (non-blocking check)
-        bool hasMessages();
+        static bool hasMessages();
         // Check for and receive any incoming messages
-        std::vector<std::string> receiveMessages();
+        static std::vector<std::string> receiveMessages();
 };
 
 

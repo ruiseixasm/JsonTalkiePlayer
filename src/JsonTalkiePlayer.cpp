@@ -55,6 +55,12 @@ static uint16_t calculate_checksum(const std::string& data) {
 
 
 
+// Define the static members
+std::unordered_map<std::string, TalkieDevice> TalkieDevice::devices_by_name;
+std::unordered_map<uint8_t, TalkieDevice> TalkieDevice::devices_by_channel;
+
+int TalkieDevice::sockfd;
+struct sockaddr_in TalkieDevice::server_addr;
 
 
 // TalkiePin methods definition
@@ -224,10 +230,6 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
 }
 
 
-
-// Define the static members
-std::unordered_map<std::string, TalkieDevice> TalkieDevice::devices_by_name;
-std::unordered_map<uint8_t, TalkieDevice> TalkieDevice::devices_by_channel;
 
 // Check if there are any messages waiting (non-blocking check)
 bool TalkieDevice::hasMessages() {
