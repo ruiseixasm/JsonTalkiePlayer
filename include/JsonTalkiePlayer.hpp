@@ -73,15 +73,15 @@ enum MessageCode {
 };
 
 
-class JsonTalkiePlayer {
+class TalkieSocket {
 private:
     const bool verbose;
     int sockfd = -1;  // ONE socket for everything
     bool socket_initialized = false;
     
 public:
-    JsonTalkiePlayer(bool verbose = false) : verbose(verbose) { }
-    ~JsonTalkiePlayer() { closeSocket(); }
+    TalkieSocket(bool verbose = false) : verbose(verbose) { }
+    ~TalkieSocket() { closeSocket(); }
     bool initialize();
     void sendToDevice(const std::string& ip, int port, const std::string& message);
     void sendBroadcast(int port, const std::string& message);
@@ -98,6 +98,7 @@ class TalkiePin {
 
 private:
     const double time_ms;
+    TalkieSocket * const talkie_socket = nullptr;
     TalkieDevice * const talkie_device = nullptr;
     std::string talkie_message;
     // Auxiliary variable for the final playing loop!!

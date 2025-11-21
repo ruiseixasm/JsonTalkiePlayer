@@ -56,7 +56,7 @@ static uint16_t calculate_checksum(const std::string& data) {
 
 
 
-bool JsonTalkiePlayer::initialize() {
+bool TalkieSocket::initialize() {
     // Create ONE socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     
@@ -74,7 +74,7 @@ bool JsonTalkiePlayer::initialize() {
     return true;
 }
 
-void JsonTalkiePlayer::sendToDevice(const std::string& ip, int port, const std::string& message) {
+void TalkieSocket::sendToDevice(const std::string& ip, int port, const std::string& message) {
     sockaddr_in target{};
     target.sin_family = AF_INET;
     target.sin_port = htons(port);
@@ -86,7 +86,7 @@ void JsonTalkiePlayer::sendToDevice(const std::string& ip, int port, const std::
     if (verbose) std::cout << "Sent to " << ip << ":" << port << " - " << message << std::endl;
 }
 
-void JsonTalkiePlayer::sendBroadcast(int port, const std::string& message) {
+void TalkieSocket::sendBroadcast(int port, const std::string& message) {
     sockaddr_in broadcast_addr{};
     broadcast_addr.sin_family = AF_INET;
     broadcast_addr.sin_port = htons(port);
@@ -98,7 +98,7 @@ void JsonTalkiePlayer::sendBroadcast(int port, const std::string& message) {
     if (verbose) std::cout << "Broadcast sent to port " << port << std::endl;
 }
 
-void JsonTalkiePlayer::closeSocket() {
+void TalkieSocket::closeSocket() {
     if (socket_initialized) {
         // Close Socket
         close(sockfd);
