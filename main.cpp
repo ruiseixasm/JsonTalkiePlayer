@@ -37,7 +37,7 @@ void printUsage(const char *programName) {
     std::cout << "Usage: " << programName << " [options] input_file_1.json [input_file_2.json]\n"
               << "Options:\n"
               << "  -h, --help       Show this help message and exit\n"
-              << "  -d, --delay      Sets a delay in milliseconds\n"
+              << "  -d, --delay MS   Sets a delay in milliseconds\n"
               << "  -v, --verbose    Enable verbose mode\n"
               << "  -V, --version    Prints the current version number\n\n"
               << "More info here: https://github.com/ruiseixasm/JsonTalkiePlayer\n\n";
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     };
 
     while (true) {
-        int c = getopt_long(argc, argv, "hvV", long_options, &option_index);
+        int c = getopt_long(argc, argv, "hd:vV", long_options, &option_index);
         if (c == -1) break;
 
         switch (c) {
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
                         return 1;
                     }
                     if (verbose) {
-                        std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
+                        if (verbose) std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
                     }
                 } catch (const std::exception& e) {
                     std::cerr << "Error: Invalid delay value '" << optarg << "'. Must be an integer." << std::endl;
