@@ -130,7 +130,7 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
         return false;
     }
 
-    ssize_t sent = sendto(sockfd, talkie_message.c_str(), talkie_message.size(), 0,
+    size_t sent = sendto(sockfd, talkie_message.c_str(), talkie_message.size(), 0,
                          (sockaddr*)&server_addr, sizeof(server_addr));
 
 #ifdef _WIN32
