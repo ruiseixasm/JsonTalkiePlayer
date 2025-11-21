@@ -73,7 +73,17 @@ enum MessageCode {
 };
 
 
+
+class TalkieDevice;
+
+
 class TalkieSocket {
+public:
+    
+    std::unordered_map<std::string, TalkieDevice> devices_by_name;
+    std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
+
+
 private:
     const bool verbose;
     int sockfd = -1;  // ONE socket for everything
@@ -82,6 +92,14 @@ private:
 public:
     TalkieSocket(bool verbose = false) : verbose(verbose) { }
     ~TalkieSocket() { closeSocket(); }
+    
+    // Explicitly delete copy assignment
+    TalkieSocket& operator=(const TalkieSocket&) = delete;
+    // Use this class as non-copyable but movable
+    TalkieSocket(TalkieSocket&&) = default;           // Move constructor OK
+    TalkieSocket& operator=(TalkieSocket&&) = default; // Move assignment OK
+
+
     bool initialize();
     void sendToDevice(const std::string& ip, int port, const std::string& message);
     void sendBroadcast(int port, const std::string& message);
@@ -90,12 +108,47 @@ public:
 
 
 
+class TalkieDevice {
+                
+    private:
+        static bool socket_initialized;
+        static int sockfd;
+        static struct sockaddr_in server_addr;
+        const bool verbose;
+        // Socket variables
+        std::string target_ip = "255.255.255.255";
+        int target_port;
+    
+        
+    public:
+        TalkieDevice(int port = 5005, bool verbose = false)
+                    : target_port(port), verbose(verbose) { }
+        ~TalkieDevice() { closeSocket(); }
 
-class TalkieDevice;
+        // Explicitly delete copy assignment
+        TalkieDevice& operator=(const TalkieDevice&) = delete;
+        // Use this class as non-copyable but movable
+        TalkieDevice(TalkieDevice&&) = default;           // Move constructor OK
+        TalkieDevice& operator=(TalkieDevice&&) = default; // Move assignment OK
+
+        bool initializeSocket();
+        void setTargetIP(const std::string& ip);
+        void closeSocket();
+        bool hasSocketOpen() const { return socket_initialized; }
+        std::string getTargetIp() const { return target_ip; }
+        int getTargetPort() const { return target_port; }
+        bool sendMessage(const std::string& talkie_message);
+        bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);
+        
+        // Check if there are any messages waiting (non-blocking check)
+        static bool hasMessages();
+        // Check for and receive any incoming messages
+        static std::vector<std::string> receiveMessages();
+};
+
 
 
 class TalkiePin {
-
 private:
     const double time_ms;
     TalkieSocket * const talkie_socket = nullptr;
@@ -182,48 +235,6 @@ public:
 
 };
 
-
-class TalkieDevice {
-    public:
-    
-    static std::unordered_map<std::string, TalkieDevice> devices_by_name;
-    static std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
-                
-    private:
-        static bool socket_initialized;
-        static int sockfd;
-        static struct sockaddr_in server_addr;
-        const bool verbose;
-        // Socket variables
-        std::string target_ip = "255.255.255.255";
-        int target_port;
-    
-        
-    public:
-        TalkieDevice(int port = 5005, bool verbose = false)
-                    : target_port(port), verbose(verbose) { }
-        ~TalkieDevice() { closeSocket(); }
-
-        // Explicitly delete copy assignment
-        TalkieDevice& operator=(const TalkieDevice&) = delete;
-        // Use this class as non-copyable but movable
-        TalkieDevice(TalkieDevice&&) = default;           // Move constructor OK
-        TalkieDevice& operator=(TalkieDevice&&) = default; // Move assignment OK
-
-        bool initializeSocket();
-        void setTargetIP(const std::string& ip);
-        void closeSocket();
-        bool hasSocketOpen() const { return socket_initialized; }
-        std::string getTargetIp() const { return target_ip; }
-        int getTargetPort() const { return target_port; }
-        bool sendMessage(const std::string& talkie_message);
-        bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);
-        
-        // Check if there are any messages waiting (non-blocking check)
-        static bool hasMessages();
-        // Check for and receive any incoming messages
-        static std::vector<std::string> receiveMessages();
-};
 
 
     
