@@ -338,7 +338,7 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                     // Talkie message is just message
                     if (jsonElement.contains("port") && jsonElement.contains("time_ms") && jsonElement.contains("message")) {
 
-                        double time_milliseconds = jsonElement["time_ms"];
+                        double time_milliseconds = jsonElement["time_ms"] + static_cast<double>(delay_ms);
                         int target_port = jsonElement["port"];
                         nlohmann::json json_talkie_message = jsonElement["message"];
                         json_talkie_message["i"] = message_id(time_milliseconds);
