@@ -254,8 +254,8 @@ bool TalkieSocket::updateAddresses() {
     bool updated_addresses = false;
     try {
         if (socket_initialized && this->hasMessages()) {
-            auto messages = this->receiveMessages();
-            for (const auto& full_message : messages) {
+            this->receiveMessages();
+            for (const auto& full_message : received_messages) {
                 std::string device_address = full_message.first;
                 std::string json_string = full_message.second;
                 
