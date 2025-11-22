@@ -237,9 +237,9 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
             // Store IP and raw message separately
             received_messages.push_back({client_ip, buffer});
             
-            if (verbose) {
-                std::cout << "Received from " << client_ip << " - " << buffer << std::endl;
-            }
+            // if (verbose) {
+            //     std::cout << "Received from " << client_ip << " - " << buffer << std::endl;
+            // }
         } else {
             break;
         }
