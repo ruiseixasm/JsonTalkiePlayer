@@ -106,7 +106,7 @@ bool TalkieSocket::initialize() {
     sockaddr_in local_addr{};
     local_addr.sin_family = AF_INET;
     local_addr.sin_addr.s_addr = INADDR_ANY;
-    local_addr.sin_port = 0;  // Let OS choose port
+    local_addr.sin_port = htons(5005);  // Default port
     
     if (bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr)) < 0) {
         std::cerr << "Bind failed: ";
@@ -168,8 +168,14 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
 
 bool TalkieSocket::hasMessages() {
     if (!socket_initialized || sockfd == -1) {
+        std::cout << "DEBUG: Socket not initialized or invalid" << std::endl;
         return false;
     }
+
+    // sockaddr_in bound_addr{};
+    // socklen_t len = sizeof(bound_addr);
+    // getsockname(sockfd, (sockaddr*)&bound_addr, &len);
+    // std::cout << "DEBUG: Socket actually bound to port: " << ntohs(bound_addr.sin_port) << std::endl;
 
     fd_set readfds;
     FD_ZERO(&readfds);
@@ -177,7 +183,7 @@ bool TalkieSocket::hasMessages() {
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 0;  // Return immediately
+    timeout.tv_usec = 0;
 
 #ifdef _WIN32
     int result = select(0, &readfds, nullptr, nullptr, &timeout);
@@ -185,10 +191,14 @@ bool TalkieSocket::hasMessages() {
     int result = select(sockfd + 1, &readfds, nullptr, nullptr, &timeout);
 #endif
 
+    // std::cout << "DEBUG: select() returned: " << result << std::endl;
+    
     if (result > 0 && FD_ISSET(sockfd, &readfds)) {
+        // std::cout << "DEBUG: Data available on socket!" << std::endl;
         return true;
     }
     
+    // std::cout << "DEBUG: No data available" << std::endl;
     return false;
 }
 
@@ -205,7 +215,7 @@ std::vector<std::string> TalkieSocket::receiveMessages() {
     socklen_t client_len = sizeof(client_addr);
 
     // Keep reading until no more messages are available
-    while (true) {
+    do {
         memset(buffer, 0, sizeof(buffer));
         
         int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
@@ -220,15 +230,15 @@ std::vector<std::string> TalkieSocket::receiveMessages() {
             std::string message = std::string(client_ip) + ": " + buffer;
             messages.push_back(message);
             
-            if (verbose) {
-                std::cout << "Received from " << client_ip << ":" << ntohs(client_addr.sin_port) 
-                         << " - " << buffer << std::endl;
-            }
+            // if (verbose) {
+            //     std::cout << "Received from " << client_ip << ":" << ntohs(client_addr.sin_port) 
+            //              << " - " << buffer << std::endl;
+            // }
         } else {
             // No more data available or error
             break;
         }
-    }
+    } while (hasMessages());
 
     return messages;
 }
