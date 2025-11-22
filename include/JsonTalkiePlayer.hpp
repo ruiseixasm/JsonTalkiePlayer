@@ -103,6 +103,7 @@ public:
     bool initialize();
     bool sendToDevice(const std::string& ip, int port, const std::string& message);
     bool sendBroadcast(int port, const std::string& message);
+    bool broadcastTempo(const int bpm_n, const int bpm_d);
     bool hasMessages();
     std::vector<std::pair<std::string, std::string>> receiveMessages();
     bool updateAddresses();
@@ -137,7 +138,6 @@ class TalkieDevice {
         std::string getTargetIP() const { return target_ip; }
         int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
-        bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);
         
 };
 

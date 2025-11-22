@@ -197,6 +197,35 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
 }
 
 
+bool TalkieSocket::broadcastTempo(const int bpm_n, const int bpm_d) {
+
+    try {
+		nlohmann::json json_broadcast = {
+			{"m", MessageCode::set},
+			{"f", "JsonMidiCreator"},
+			{"c", 0},
+			{"i", 0},
+			{"n", "bpm_n"},
+			{"v", bpm_n}
+		};
+
+        json_broadcast["c"] = calculate_checksum(encode(json_broadcast));
+        this->sendBroadcast(5005, encode(json_broadcast));
+        json_broadcast["n"] = "bpm_d";
+        json_broadcast["v"] = bpm_d;
+        json_broadcast["c"] = calculate_checksum(encode(json_broadcast));
+        this->sendBroadcast(5005, encode(json_broadcast));
+
+    } catch (const std::exception& e) {
+
+        std::cerr << "Fatal error while sending Tempo: " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+
 bool TalkieSocket::hasMessages() {
     if (!socket_initialized || sockfd == -1) {
         std::cout << "DEBUG: Socket not initialized or invalid" << std::endl;
@@ -369,33 +398,6 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
 }
 
 
-bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d) {
-
-    try {
-
-        nlohmann::json json_talkie_tempo = json_talkie_message; // Does a copy
-        json_talkie_tempo["m"] = MessageCode::set;
-        json_talkie_tempo["i"] = 0;
-
-        json_talkie_tempo["n"] = "bpm_n";
-        json_talkie_tempo["v"] = bpm_n;
-        json_talkie_tempo["c"] = 0;
-        json_talkie_tempo["c"] = calculate_checksum(encode(json_talkie_tempo));
-        this->sendMessage(encode(json_talkie_tempo));
-        json_talkie_tempo["n"] = "bpm_d";
-        json_talkie_tempo["v"] = bpm_d;
-        json_talkie_tempo["c"] = 0;
-        json_talkie_tempo["c"] = calculate_checksum(encode(json_talkie_tempo));
-        this->sendMessage(encode(json_talkie_tempo));
-
-    } catch (const std::exception& e) {
-
-        std::cerr << "Fatal error while sending Tempo: " << e.what() << std::endl;
-        return false;
-    }
-
-    return true;
-}
 
 
 
@@ -515,9 +517,6 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                 std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
                 TalkieDevice *talkie_device = nullptr;
 
-                int bpm_n = 0;
-                int bpm_d = 0;
-
                 for (auto jsonElement : jsonFileContent)
                 {
                     // Talkie message is just message
@@ -541,10 +540,6 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                             } else {
                                 auto device = talkie_socket.devices_by_name.emplace(name, TalkieDevice(&talkie_socket, target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
-                                // New device found, needs to set its tempo right away
-                                if (bpm_d != 0) {
-                                    talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
-                                }
                             }
                         } else if (json_talkie_message["t"].is_number()) {
                             uint8_t channel = json_talkie_message["t"].get<uint8_t>();
@@ -555,10 +550,6 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                             } else {
                                 auto device = devices_by_channel.emplace(channel, TalkieDevice(&talkie_socket, target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
-                                // New channel found, needs to set its tempo right away
-                                if (bpm_d != 0) {
-                                    talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
-                                }
                             }
                         } else {
                             continue;
@@ -569,12 +560,12 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                         play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
                         play_reporting.total_validated++;
 
-                    } else if (bpm_d == 0 && jsonElement.contains("tempo")) {
+                    } else if (jsonElement.contains("tempo")) {
 
                         nlohmann::json json_talkie_clock = jsonElement["tempo"];
-                        bpm_n = json_talkie_clock["bpm_numerator"];
-                        bpm_d = json_talkie_clock["bpm_denominator"];
-
+                        int bpm_n = json_talkie_clock["bpm_numerator"];
+                        int bpm_d = json_talkie_clock["bpm_denominator"];
+						talkie_socket.broadcastTempo(bpm_n, bpm_d);
                     }
                 }
             }
