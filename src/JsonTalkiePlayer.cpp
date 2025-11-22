@@ -40,47 +40,48 @@ static uint16_t calculate_checksum(const std::string& data) {
     uint16_t checksum = 0;
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data.c_str());
     size_t len = data.length();
-	uint8_t data_bytes[1024] = {0};
-	size_t data_bytes_i = 0;
-	
-	// ASCII byte values:
-	// 	'c' = 99
-	// 	':' = 58
-	// 	'"' = 34
-	// 	'0' = 48
-	// 	'9' = 57
+    if (len < 256) {    // JsonTalkie Arduino library is programmed to handle just up to 128 bytes
+        uint8_t data_bytes[256] = {0};
+        size_t data_bytes_i = 0;
+        
+        // ASCII byte values:
+        // 	'c' = 99
+        // 	':' = 58
+        // 	'"' = 34
+        // 	'0' = 48
+        // 	'9' = 57
 
-	// Has to be pre processed (linearly)
-	bool at_c0 = false;
-	for (size_t i = 0; i < len; ++i) {
-		if (!at_c0 && i > 3 && bytes[i - 3] == 'c' && bytes[i - 1] == ':' && bytes[i - 4] == '"' && bytes[i - 2] == '"') {
-			at_c0 = true;
-			data_bytes[data_bytes_i++] = '0';
-			continue;
-		} else if (at_c0) {
-			if (bytes[i] < '0' || bytes[i] > '9') {
-				at_c0 = false;
-			} else {
-				continue;
-			}
-		}
-		data_bytes[data_bytes_i] = bytes[i];
-		data_bytes_i++;
-	}
-	len = data_bytes_i;
-    // std::cout << "Final message: " << data_bytes << std::endl;
+        // Has to be pre processed (linearly)
+        bool at_c0 = false;
+        for (size_t i = 0; i < len; ++i) {
+            if (!at_c0 && i > 3 && bytes[i - 3] == 'c' && bytes[i - 1] == ':' && bytes[i - 4] == '"' && bytes[i - 2] == '"') {
+                at_c0 = true;
+                data_bytes[data_bytes_i++] = '0';
+                continue;
+            } else if (at_c0) {
+                if (bytes[i] < '0' || bytes[i] > '9') {
+                    at_c0 = false;
+                } else {
+                    continue;
+                }
+            }
+            data_bytes[data_bytes_i] = bytes[i];
+            data_bytes_i++;
+        }
+        len = data_bytes_i;
+        // std::cout << "Final message: " << data_bytes << std::endl;
 
-	uint16_t chunk = 0;
+        uint16_t chunk = 0;
 
-    for (size_t i = 0; i < len; i += 2) {
-		// Combine two data_bytes into 16-bit value
-		chunk = data_bytes[i] << 8;
-		if (i + 1 < len) {
-			chunk |= data_bytes[i + 1];
-		}
-		checksum ^= chunk;
+        for (size_t i = 0; i < len; i += 2) {
+            // Combine two data_bytes into 16-bit value
+            chunk = data_bytes[i] << 8;
+            if (i + 1 < len) {
+                chunk |= data_bytes[i + 1];
+            }
+            checksum ^= chunk;
+        }
     }
-    
     return checksum & 0xFFFF;
 }
 
