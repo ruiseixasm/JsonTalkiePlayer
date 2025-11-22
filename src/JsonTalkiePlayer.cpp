@@ -198,7 +198,7 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
 }
 
 
-bool TalkieSocket::broadcastTempo(const int bpm_n, const int bpm_d) {
+bool TalkieSocket::broadcastTempo(const long bpm_10) {
 
     try {
 		nlohmann::json json_broadcast = {
@@ -206,14 +206,10 @@ bool TalkieSocket::broadcastTempo(const int bpm_n, const int bpm_d) {
 			{"f", "JsonMidiCreator"},
 			{"c", 0},
 			{"i", 0},
-			{"n", "bpm_n"},
-			{"v", bpm_n}
+			{"n", "bpm"},
+			{"v", bpm_10}
 		};
 
-        json_broadcast["c"] = calculate_checksum(encode(json_broadcast));
-        this->sendBroadcast(5005, encode(json_broadcast));
-        json_broadcast["n"] = "bpm_d";
-        json_broadcast["v"] = bpm_d;
         json_broadcast["c"] = calculate_checksum(encode(json_broadcast));
         this->sendBroadcast(5005, encode(json_broadcast));
 
@@ -564,9 +560,8 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                     } else if (jsonElement.contains("tempo")) {
 
                         nlohmann::json json_talkie_clock = jsonElement["tempo"];
-                        int bpm_n = json_talkie_clock["bpm_numerator"];
-                        int bpm_d = json_talkie_clock["bpm_denominator"];
-						talkie_socket.broadcastTempo(bpm_n, bpm_d);
+                        long bpm_10 = json_talkie_clock["bpm_10"];
+						talkie_socket.broadcastTempo(bpm_10);
                     }
                 }
             }

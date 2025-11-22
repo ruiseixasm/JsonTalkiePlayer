@@ -103,7 +103,7 @@ public:
     bool initialize();
     bool sendToDevice(const std::string& ip, int port, const std::string& message);
     bool sendBroadcast(int port, const std::string& message);
-    bool broadcastTempo(const int bpm_n, const int bpm_d);
+    bool broadcastTempo(const long bpm_10);
     bool hasMessages();
     std::vector<std::pair<std::string, std::string>> receiveMessages();
     bool updateAddresses();
