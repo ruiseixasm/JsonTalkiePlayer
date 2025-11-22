@@ -88,6 +88,7 @@ private:
     bool socket_initialized = false;
     static struct sockaddr_in server_addr;
     std::vector<std::pair<std::string, std::string>> received_messages;
+    unsigned int total_updates = 0;
     
 public:
     TalkieSocket(bool verbose = false) : verbose(verbose) { }
@@ -105,6 +106,7 @@ public:
     bool hasMessages();
     std::vector<std::pair<std::string, std::string>> receiveMessages();
     bool updateAddresses();
+    unsigned int totalUpdates() const { return total_updates; }
     void closeSocket();
 };
 
@@ -130,6 +132,7 @@ class TalkieDevice {
         TalkieDevice(TalkieDevice&&) = default;             // Move constructor OK
         TalkieDevice& operator=(TalkieDevice&&) = default;  // Move assignment OK
 
+        TalkieSocket * const getSocket();
         void setTargetIP(const std::string& ip) { target_ip = ip; }
         std::string getTargetIP() const { return target_ip; }
         int getTargetPort() const { return target_port; }

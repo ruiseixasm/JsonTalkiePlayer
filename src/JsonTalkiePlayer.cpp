@@ -296,6 +296,7 @@ bool TalkieSocket::updateAddresses() {
                                 // std::cout << "3. Accepted message: " << json_string << std::endl;
                                 talkie_device->setTargetIP(device_address);
                                 std::cout << "New Address " << device_address << " for " << device_name << std::endl;
+                                total_updates++;
                                 updated_addresses = true;
                         } else {
                             std::cout << "   ❌ CHECKSUM FAILED! Expected: " << checksum 
@@ -326,7 +327,9 @@ void TalkieSocket::closeSocket() {
     }
 }
 
-
+TalkieSocket * const TalkieDevice::getSocket() {
+    return talkie_socket;
+}
 
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {
     if (talkie_message.empty()) {
@@ -749,7 +752,7 @@ void highResolutionSleep(long long microseconds, TalkieSocket * const talkie_soc
         elapsedMicroseconds = static_cast<double>(end.QuadPart - start.QuadPart) * 1e6 / frequency.QuadPart;
         
         // Update received Addresses
-        if (talkie_socket) {
+        if (talkie_socket && talkie_socket->totalUpdates() < talkie_socket->devices_by_name.size()) {
             talkie_socket->updateAddresses();
         }
 
