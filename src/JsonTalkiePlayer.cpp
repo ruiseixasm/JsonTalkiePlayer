@@ -57,25 +57,76 @@ static uint16_t calculate_checksum(const std::string& data) {
 
 
 bool TalkieSocket::initialize() {
-    if (!socket_initialized) {
-        // Create ONE socket
-        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-        
-        // Enable broadcast once
-        int broadcast = 1;
-        setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
-        
-        // Bind once
-        sockaddr_in local_addr{};
-        local_addr.sin_family = AF_INET;
-        local_addr.sin_addr.s_addr = INADDR_ANY;
-        local_addr.sin_port = 0;  // Let OS choose port
-        bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr));
-        
-        socket_initialized = true;
+    if (socket_initialized) {
+        return true;
     }
+
+#ifdef _WIN32
+    // WINDOWS: Must initialize Winsock first!
+    WSADATA wsaData;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        std::cerr << "WSAStartup failed: " << result << std::endl;
+        return false;
+    }
+#endif
+
+    // Create socket with error checking
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+#ifdef _WIN32
+    if (sockfd == INVALID_SOCKET) {
+        std::cerr << "Failed to create socket. Error: " << WSAGetLastError() << std::endl;
+        WSACleanup();  // Clean up Winsock
+        return false;
+    }
+#else
+    if (sockfd < 0) {
+        std::cerr << "Failed to create socket. Error: " << strerror(errno) << std::endl;
+        return false;
+    }
+#endif
+
+    // Enable broadcast with error checking
+    int broadcast = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast)) < 0) {
+        std::cerr << "Failed to enable broadcast: ";
+#ifdef _WIN32
+        std::cerr << WSAGetLastError() << std::endl;
+        closesocket(sockfd);
+        WSACleanup();
+#else
+        std::cerr << strerror(errno) << std::endl;
+        close(sockfd);
+#endif
+        sockfd = -1;
+        return false;
+    }
+
+    // Bind with error checking
+    sockaddr_in local_addr{};
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_addr.s_addr = INADDR_ANY;
+    local_addr.sin_port = 0;  // Let OS choose port
+    
+    if (bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr)) < 0) {
+        std::cerr << "Bind failed: ";
+#ifdef _WIN32
+        std::cerr << WSAGetLastError() << std::endl;
+        closesocket(sockfd);
+        WSACleanup();
+#else
+        std::cerr << strerror(errno) << std::endl;
+        close(sockfd);
+#endif
+        sockfd = -1;
+        return false;
+    }
+
+    socket_initialized = true;
+    if (verbose) std::cout << "Socket initialized successfully" << std::endl;
     return true;
 }
+
 
 bool TalkieSocket::sendToDevice(const std::string& ip, int port, const std::string& message) {
     if (!socket_initialized) {
@@ -90,10 +141,11 @@ bool TalkieSocket::sendToDevice(const std::string& ip, int port, const std::stri
     sendto(sockfd, message.c_str(), message.length(), 0,
             (sockaddr*)&target, sizeof(target));
     
-    if (verbose) std::cout << "Sent to " << ip << ":" << port << " - " << message << std::endl;
+    if (verbose) std::cout << "Message: " << message << " sent to " << ip << ":" << port << std::endl;
 
     return true;
 }
+
 
 bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
     if (!socket_initialized) {
@@ -108,17 +160,21 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
     sendto(sockfd, message.c_str(), message.length(), 0,
             (sockaddr*)&broadcast_addr, sizeof(broadcast_addr));
     
-    if (verbose) std::cout << "Broadcast sent to port " << port << std::endl;
+    if (verbose) std::cout << "Message: " << message << " broadcasted to port " << port << std::endl;
 
     return true;
 }
 
+
 void TalkieSocket::closeSocket() {
-    if (socket_initialized) {
-        // Close Socket
+    if (sockfd != -1) {
+#ifdef _WIN32
+        closesocket(sockfd);
+        WSACleanup();  // Clean up Winsock when done
+#else
         close(sockfd);
+#endif
         sockfd = -1;
-        socket_initialized = false;
     }
 }
 
@@ -231,10 +287,10 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
     // No IP defined
     if (target_ip.empty()) {
         // Use broadcast as default
-        talkie_socket->sendBroadcast(target_port, talkie_message);
+        return talkie_socket->sendBroadcast(target_port, talkie_message);
     } else {
         // Use specific IP
-        talkie_socket->sendToDevice(target_ip, target_port, talkie_message);
+        return talkie_socket->sendToDevice(target_ip, target_port, talkie_message);
     }
 
 // #ifdef _WIN32
@@ -254,7 +310,7 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
 //         return false;
 //     }
 
-    return true;
+    return false;
 }
 
 
