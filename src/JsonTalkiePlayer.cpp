@@ -244,29 +244,38 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
 
 bool TalkieSocket::updateAddresses() {
     
-    // Check and process messages
-    if (socket_initialized && this->hasMessages()) {
-        auto messages = this->receiveMessages();
-        for (const auto& full_message : messages) {
-            std::string device_address = full_message.first;
-            std::string json_string = full_message.second;
-            
-            nlohmann::json json_message = nlohmann::json::parse(json_string);  // decode
-            uint16_t checksum = json_message['c'];
-            json_message["c"] = 0;
-            if (checksum == calculate_checksum(encode(json_message))) {
-                std::string device_name = json_message['f'];
-                auto device_it = devices_by_name.find(device_name);  // Use iterator, not device
-                if (device_it != devices_by_name.end()) {
-                    // Process the message here
-                    std::cout << "Received during sleep: " << json_string << std::endl;
-                    auto talkie_device = &device_it->second;  // Use iterator directly
-                    talkie_device->setTargetIP(device_address);
-                    return true;
+    try {
+
+        // Check and process messages
+        if (socket_initialized && this->hasMessages()) {
+            auto messages = this->receiveMessages();
+            for (const auto& full_message : messages) {
+                std::string device_address = full_message.first;
+                std::string json_string = full_message.second;
+                
+                nlohmann::json json_message = nlohmann::json::parse(json_string);  // decode
+                uint16_t checksum = json_message["c"];
+                json_message["c"] = 0;
+                if (checksum == calculate_checksum(encode(json_message))) {
+                    std::string device_name = json_message["f"];
+                    auto device_it = devices_by_name.find(device_name);  // Use iterator, not device
+                    if (device_it != devices_by_name.end()) {
+                        // Process the message here
+                        std::cout << "Received during sleep: " << json_string << std::endl;
+                        auto talkie_device = &device_it->second;  // Use iterator directly
+                        talkie_device->setTargetIP(device_address);
+                        return true;
+                    }
                 }
             }
         }
+    
+    } catch (const std::exception& e) {
+
+        std::cerr << "Fatal error while updating Addresses: " << e.what() << std::endl;
+        return false;
     }
+
     return false;
 }
 
@@ -747,7 +756,7 @@ void highResolutionSleep(long long microseconds, TalkieSocket * const talkie_soc
             talkie_socket->updateAddresses();
         }
 
-        
+
         // // Check and process messages
         // if (talkie_socket && talkie_socket->hasMessages()) {
         //     auto messages = talkie_socket->receiveMessages();
