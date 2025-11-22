@@ -570,7 +570,7 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                 long long elapsed_time_us = elapsed_time.count();
                 long long sleep_time_us = next_pin_time_us > elapsed_time_us ? next_pin_time_us - elapsed_time_us : 0;
 
-                highResolutionSleep(sleep_time_us);  // Sleep for x microseconds
+                highResolutionSleep(sleep_time_us, &talkie_socket);  // Sleep for x microseconds
 
                 auto pluck_time = std::chrono::high_resolution_clock::now() - playing_start;
                 talkie_pin.pluckTooth();  // as soon as possible! <----- Talkie Send
@@ -657,31 +657,61 @@ void disableBackgroundThrottling() {
 }
 
 // High-resolution sleep function
-void highResolutionSleep(long long microseconds) {
+void highResolutionSleep(long long microseconds, TalkieSocket * const talkie_socket) {
 #ifdef _WIN32
-    // Windows: High-resolution sleep using QueryPerformanceCounter
     LARGE_INTEGER frequency, start, end;
     QueryPerformanceFrequency(&frequency);
     QueryPerformanceCounter(&start);
-
-    long long sleepInterval = microseconds > 100*1000 ? microseconds - 100*1000 : 0;  // Sleep 1ms if the wait is longer than 100ms
-    if (sleepInterval > 0) {
-        // Sleep for most of the time to save CPU, then busy wait for the remaining time
-        std::this_thread::sleep_for(std::chrono::microseconds(sleepInterval));
-    }
 
     double elapsedMicroseconds = 0;
     do {
         QueryPerformanceCounter(&end);
         elapsedMicroseconds = static_cast<double>(end.QuadPart - start.QuadPart) * 1e6 / frequency.QuadPart;
+        
+        // Check and process messages
+        if (talkie_socket && talkie_socket->hasMessages()) {
+            auto messages = talkie_socket->receiveMessages();
+            for (const auto& msg : messages) {
+                // Process the message here
+                std::cout << "Received during sleep: " << msg << std::endl;
+            }
+        }
+        
+        // Small sleep to prevent 100% CPU usage
+        if (elapsedMicroseconds < microseconds - 1000) {  // If we have more than 1ms left
+            std::this_thread::sleep_for(std::chrono::microseconds(100));  // Sleep 100us
+        }
+        
     } while (elapsedMicroseconds < microseconds);
     
 #else
-    // Linux: High-resolution sleep using clock_nanosleep
-    struct timespec ts;
-    ts.tv_sec = microseconds / 1e6;
-    ts.tv_nsec = (microseconds % static_cast<long long>(1e6)) * 1000;
-    clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, nullptr);
+    // Linux: High-resolution timing using clock_gettime
+    struct timespec start, current;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    
+    long long elapsedNanoseconds = 0;
+    long long targetNanoseconds = microseconds * 1000;  // Convert microseconds to nanoseconds
+    
+    do {
+        clock_gettime(CLOCK_MONOTONIC, &current);
+        elapsedNanoseconds = (current.tv_sec - start.tv_sec) * 1000000000LL + 
+                           (current.tv_nsec - start.tv_nsec);
+        
+        // Check and process messages
+        if (talkie_socket && talkie_socket->hasMessages()) {
+            auto messages = talkie_socket->receiveMessages();
+            for (const auto& msg : messages) {
+                // Process the message here
+                std::cout << "Received during sleep: " << msg << std::endl;
+            }
+        }
+        
+        // Small sleep to prevent 100% CPU usage
+        if (elapsedNanoseconds < targetNanoseconds - 1000000) {  // If we have more than 1ms left
+            std::this_thread::sleep_for(std::chrono::microseconds(100));  // Sleep 100us
+        }
+        
+    } while (elapsedNanoseconds < targetNanoseconds);
 #endif
 }
 

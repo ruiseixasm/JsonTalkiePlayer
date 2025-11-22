@@ -233,7 +233,7 @@ public:
 void disableBackgroundThrottling();
 
 void setRealTimeScheduling();
-void highResolutionSleep(long long microseconds);
+void highResolutionSleep(long long microseconds, TalkieSocket * const talkie_socket);
 int PlayList(const char* json_str, const int delay_ms, bool verbose = false);
 
 
