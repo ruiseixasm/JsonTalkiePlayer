@@ -57,24 +57,31 @@ static uint16_t calculate_checksum(const std::string& data) {
 
 
 bool TalkieSocket::initialize() {
-    // Create ONE socket
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    
-    // Enable broadcast once
-    int broadcast = 1;
-    setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
-    
-    // Bind once
-    sockaddr_in local_addr{};
-    local_addr.sin_family = AF_INET;
-    local_addr.sin_addr.s_addr = INADDR_ANY;
-    local_addr.sin_port = 0;  // Let OS choose port
-    bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr));
-    
+    if (!socket_initialized) {
+        // Create ONE socket
+        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+        
+        // Enable broadcast once
+        int broadcast = 1;
+        setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
+        
+        // Bind once
+        sockaddr_in local_addr{};
+        local_addr.sin_family = AF_INET;
+        local_addr.sin_addr.s_addr = INADDR_ANY;
+        local_addr.sin_port = 0;  // Let OS choose port
+        bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr));
+        
+        socket_initialized = true;
+    }
     return true;
 }
 
-void TalkieSocket::sendToDevice(const std::string& ip, int port, const std::string& message) {
+bool TalkieSocket::sendToDevice(const std::string& ip, int port, const std::string& message) {
+    if (!socket_initialized) {
+        return false;
+    }
+
     sockaddr_in target{};
     target.sin_family = AF_INET;
     target.sin_port = htons(port);
@@ -84,9 +91,15 @@ void TalkieSocket::sendToDevice(const std::string& ip, int port, const std::stri
             (sockaddr*)&target, sizeof(target));
     
     if (verbose) std::cout << "Sent to " << ip << ":" << port << " - " << message << std::endl;
+
+    return true;
 }
 
-void TalkieSocket::sendBroadcast(int port, const std::string& message) {
+bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
+    if (!socket_initialized) {
+        return false;
+    }
+
     sockaddr_in broadcast_addr{};
     broadcast_addr.sin_family = AF_INET;
     broadcast_addr.sin_port = htons(port);
@@ -96,6 +109,8 @@ void TalkieSocket::sendBroadcast(int port, const std::string& message) {
             (sockaddr*)&broadcast_addr, sizeof(broadcast_addr));
     
     if (verbose) std::cout << "Broadcast sent to port " << port << std::endl;
+
+    return true;
 }
 
 void TalkieSocket::closeSocket() {
@@ -111,112 +126,100 @@ void TalkieSocket::closeSocket() {
 
 
 
-bool TalkieDevice::socket_initialized = false;
-int TalkieDevice::sockfd;
-struct sockaddr_in TalkieDevice::server_addr;
+// // TalkieDevice methods definition
+// bool TalkieDevice::initializeSocket() {
+//     if (socket_initialized)
+//         return true;
 
+// #ifdef _WIN32
+//     // Windows-specific initialization
+//     WSADATA wsaData;
+//     int wsa = WSAStartup(MAKEWORD(2,2), &wsaData);
+//     if (wsa != 0) {
+//         std::cerr << "WSAStartup failed: " << wsa << "\n";
+//         return false;
+//     }
+// #endif
 
-// TalkiePin methods definition
-void TalkiePin::pluckTooth() {
-    if (talkie_device != nullptr)
-        talkie_device->sendMessage(talkie_message);
-}
+//     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+// #ifdef _WIN32
+//     if (sockfd == INVALID_SOCKET) {
+//         std::cerr << "Failed to create socket. Error: " << WSAGetLastError() << "\n";
+// #else
+//     if (sockfd < 0) {
+//         std::cerr << "Failed to create socket. Error: " << strerror(errno) << "\n";
+// #endif
+//         return false;
+//     }
 
+//     // Enable broadcast support
+//     int bc = 1;  // Use int instead of BOOL for cross-platform
+//     if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&bc, sizeof(bc)) < 0) {
+//         std::cerr << "Failed to enable broadcast: ";
+// #ifdef _WIN32
+//         std::cerr << WSAGetLastError() << "\n";
+//         closesocket(sockfd);
+// #else
+//         std::cerr << strerror(errno) << "\n";
+//         close(sockfd);
+// #endif
+//         return false;
+//     }
 
-// TalkieDevice methods definition
-bool TalkieDevice::initializeSocket() {
-    if (socket_initialized)
-        return true;
+//     // Bind to any local port so broadcast is allowed
+//     sockaddr_in localAddr {};
+//     localAddr.sin_family = AF_INET;
+//     localAddr.sin_port = htons(0);
+//     localAddr.sin_addr.s_addr = INADDR_ANY;
 
-#ifdef _WIN32
-    // Windows-specific initialization
-    WSADATA wsaData;
-    int wsa = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (wsa != 0) {
-        std::cerr << "WSAStartup failed: " << wsa << "\n";
-        return false;
-    }
-#endif
+// #ifdef _WIN32
+//     if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) == SOCKET_ERROR) {
+//         std::cerr << "Bind failed: " << WSAGetLastError() << "\n";
+//         closesocket(sockfd);
+// #else
+//     if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) < 0) {
+//         std::cerr << "Bind failed: " << strerror(errno) << "\n";
+//         close(sockfd);
+// #endif
+//         return false;
+//     }
 
-    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-#ifdef _WIN32
-    if (sockfd == INVALID_SOCKET) {
-        std::cerr << "Failed to create socket. Error: " << WSAGetLastError() << "\n";
-#else
-    if (sockfd < 0) {
-        std::cerr << "Failed to create socket. Error: " << strerror(errno) << "\n";
-#endif
-        return false;
-    }
+//     // Set remote broadcast address
+//     memset(&server_addr, 0, sizeof(server_addr));
+//     server_addr.sin_family = AF_INET;
+//     server_addr.sin_port = htons(target_port);
+//     server_addr.sin_addr.s_addr = INADDR_BROADCAST;  // 255.255.255.255
 
-    // Enable broadcast support
-    int bc = 1;  // Use int instead of BOOL for cross-platform
-    if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&bc, sizeof(bc)) < 0) {
-        std::cerr << "Failed to enable broadcast: ";
-#ifdef _WIN32
-        std::cerr << WSAGetLastError() << "\n";
-        closesocket(sockfd);
-#else
-        std::cerr << strerror(errno) << "\n";
-        close(sockfd);
-#endif
-        return false;
-    }
+//     socket_initialized = true;
+//     if (verbose) std::cout << "Broadcast socket initialized\n";
 
-    // Bind to any local port so broadcast is allowed
-    sockaddr_in localAddr {};
-    localAddr.sin_family = AF_INET;
-    localAddr.sin_port = htons(0);
-    localAddr.sin_addr.s_addr = INADDR_ANY;
-
-#ifdef _WIN32
-    if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) == SOCKET_ERROR) {
-        std::cerr << "Bind failed: " << WSAGetLastError() << "\n";
-        closesocket(sockfd);
-#else
-    if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) < 0) {
-        std::cerr << "Bind failed: " << strerror(errno) << "\n";
-        close(sockfd);
-#endif
-        return false;
-    }
-
-    // Set remote broadcast address
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(target_port);
-    server_addr.sin_addr.s_addr = INADDR_BROADCAST;  // 255.255.255.255
-
-    socket_initialized = true;
-    if (verbose) std::cout << "Broadcast socket initialized\n";
-
-    return true;
-}
+//     return true;
+// }
 
 
 void TalkieDevice::setTargetIP(const std::string& ip) {
     target_ip = ip;
     
-    // If socket exists, we need to update server_addr
-    if (socket_initialized) {
-        memset(&server_addr, 0, sizeof(server_addr));
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(target_port);
-        inet_pton(AF_INET, target_ip.c_str(), &server_addr.sin_addr);
+    // // If socket exists, we need to update server_addr
+    // if (socket_initialized) {
+    //     memset(&server_addr, 0, sizeof(server_addr));
+    //     server_addr.sin_family = AF_INET;
+    //     server_addr.sin_port = htons(target_port);
+    //     inet_pton(AF_INET, target_ip.c_str(), &server_addr.sin_addr);
         
-        if (verbose) std::cout << "Target updated to " << target_ip << ":" << target_port << "\n";
-    }
+    //     if (verbose) std::cout << "Target updated to " << target_ip << ":" << target_port << "\n";
+    // }
 }
 
 
-void TalkieDevice::closeSocket() {
-    if (socket_initialized) {
-        // Close Socket
-        close(sockfd);
-        sockfd = -1;
-        socket_initialized = false;
-    }
-}
+// void TalkieDevice::closeSocket() {
+//     if (socket_initialized) {
+//         // Close Socket
+//         close(sockfd);
+//         sockfd = -1;
+//         socket_initialized = false;
+//     }
+// }
 
 
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {
@@ -225,30 +228,31 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
         return false;
     }
 
-    if (!socket_initialized || sockfd < 0) {
-        std::cerr << "Error: Socket not initialized\n";
-        return false;
+    // No IP defined
+    if (target_ip.empty()) {
+        // Use broadcast as default
+        talkie_socket->sendBroadcast(target_port, talkie_message);
+    } else {
+        // Use specific IP
+        talkie_socket->sendToDevice(target_ip, target_port, talkie_message);
     }
 
-    size_t sent = sendto(sockfd, talkie_message.c_str(), talkie_message.size(), 0,
-                         (sockaddr*)&server_addr, sizeof(server_addr));
+// #ifdef _WIN32
+//     bool error = (sent == SOCKET_ERROR);
+// #else
+//     bool error = (sent < 0);
+// #endif
 
-#ifdef _WIN32
-    bool error = (sent == SOCKET_ERROR);
-#else
-    bool error = (sent < 0);
-#endif
-
-    if (error) {
-        std::cerr << "Failed to send message: ";
-#ifdef _WIN32
-        std::cerr << "WSA error " << WSAGetLastError();
-#else
-        std::cerr << strerror(errno);
-#endif
-        std::cerr << "\n";
-        return false;
-    }
+//     if (error) {
+//         std::cerr << "Failed to send message: ";
+// #ifdef _WIN32
+//         std::cerr << "WSA error " << WSAGetLastError();
+// #else
+//         std::cerr << strerror(errno);
+// #endif
+//         std::cerr << "\n";
+//         return false;
+//     }
 
     return true;
 }
@@ -284,57 +288,65 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
 
 
 
-// Check if there are any messages waiting (non-blocking check)
-bool TalkieDevice::hasMessages() {
-    if (sockfd < 0) return false;
+// // Check if there are any messages waiting (non-blocking check)
+// bool TalkieDevice::hasMessages() {
+//     if (sockfd < 0) return false;
 
-    // Use select to check if data is available without blocking
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(sockfd, &readfds);
+//     // Use select to check if data is available without blocking
+//     fd_set readfds;
+//     FD_ZERO(&readfds);
+//     FD_SET(sockfd, &readfds);
 
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0; // Return immediately
+//     struct timeval timeout;
+//     timeout.tv_sec = 0;
+//     timeout.tv_usec = 0; // Return immediately
 
-    int result = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
-    return result > 0 && FD_ISSET(sockfd, &readfds);
-}
+//     int result = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
+//     return result > 0 && FD_ISSET(sockfd, &readfds);
+// }
 
-// Check for and receive any incoming messages
-std::vector<std::string> TalkieDevice::receiveMessages() {
-    std::vector<std::string> messages;
-    if (sockfd < 0) return messages;
+// // Check for and receive any incoming messages
+// std::vector<std::string> TalkieDevice::receiveMessages() {
+//     std::vector<std::string> messages;
+//     if (sockfd < 0) return messages;
 
-    char buffer[1024];
-    struct sockaddr_in client_addr;
-    socklen_t client_len = sizeof(client_addr);
+//     char buffer[1024];
+//     struct sockaddr_in client_addr;
+//     socklen_t client_len = sizeof(client_addr);
 
-    // Keep reading until no more messages are available
-    while (true) {
-        memset(buffer, 0, sizeof(buffer));
-        int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
-                                (struct sockaddr*)&client_addr, &client_len);
+//     // Keep reading until no more messages are available
+//     while (true) {
+//         memset(buffer, 0, sizeof(buffer));
+//         int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
+//                                 (struct sockaddr*)&client_addr, &client_len);
 
-        if (received > 0) {
-            buffer[received] = '\0';
-            char client_ip[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+//         if (received > 0) {
+//             buffer[received] = '\0';
+//             char client_ip[INET_ADDRSTRLEN];
+//             inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
             
-            std::string message = std::string(client_ip) + ": " + buffer;
-            messages.push_back(message);
+//             std::string message = std::string(client_ip) + ": " + buffer;
+//             messages.push_back(message);
             
-            std::cout << "Received: " << message << std::endl;
-        } else {
-            // No more data available (non-blocking would return immediately)
-            break;
-        }
-    }
+//             std::cout << "Received: " << message << std::endl;
+//         } else {
+//             // No more data available (non-blocking would return immediately)
+//             break;
+//         }
+//     }
 
-    return messages;
+//     return messages;
+// }
+
+
+
+
+
+// TalkiePin methods definition
+void TalkiePin::pluckTooth() {
+    if (talkie_device != nullptr)
+        talkie_device->sendMessage(talkie_message);
 }
-
-
 
 
 
@@ -386,10 +398,11 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
         std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
     }
     
+    TalkieSocket talkie_socket(verbose);
     
     // Where the playing happens
-    {
-        TalkieSocket talkie_socket(verbose);
+    if (talkie_socket.initialize()) {
+
         std::list<TalkiePin> talkieToProcess;
         std::list<TalkiePin> talkieProcessed;
 
@@ -440,6 +453,7 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                 }
 
 
+                std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
                 TalkieDevice *talkie_device = nullptr;
 
                 int bpm_n = 0;
@@ -466,24 +480,24 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                             if (device_it != talkie_socket.devices_by_name.end()) {
                                 talkie_device = &device_it->second;  // Use iterator directly
                             } else {
-                                auto device = talkie_socket.devices_by_name.emplace(name, TalkieDevice(target_port, verbose));
+                                auto device = talkie_socket.devices_by_name.emplace(name, TalkieDevice(&talkie_socket, target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
                                 // New device found, needs to set its tempo right away
-                                if (bpm_d != 0 && talkie_device->initializeSocket()) {
+                                if (bpm_d != 0) {
                                     talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
                                 }
                             }
                         } else if (json_talkie_message["t"].is_number()) {
                             uint8_t channel = json_talkie_message["t"].get<uint8_t>();
 
-                            auto device_it = talkie_socket.devices_by_channel.find(channel);  // Use iterator, not device
-                            if (device_it != talkie_socket.devices_by_channel.end()) {
+                            auto device_it = devices_by_channel.find(channel);  // Use iterator, not device
+                            if (device_it != devices_by_channel.end()) {
                                 talkie_device = &device_it->second;  // Use iterator directly
                             } else {
-                                auto device = talkie_socket.devices_by_channel.emplace(channel, TalkieDevice(target_port, verbose));
+                                auto device = devices_by_channel.emplace(channel, TalkieDevice(&talkie_socket, target_port, verbose));
                                 talkie_device = &device.first->second; // Get pointer to stored object
                                 // New channel found, needs to set its tempo right away
-                                if (bpm_d != 0 && talkie_device->initializeSocket()) {
+                                if (bpm_d != 0) {
                                     talkie_device->sendTempo(jsonElement["message"], bpm_n, bpm_d);
                                 }
                             }
@@ -491,12 +505,10 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
                             continue;
                         }
 
-                        if (talkie_device->initializeSocket()) {
-                            const std::string talkie_message = encode(json_talkie_message);
-                            talkieToProcess.push_back( TalkiePin(time_milliseconds, talkie_device, talkie_message) );
-                            play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
-                            play_reporting.total_validated++;
-                        }
+                        const std::string talkie_message = encode(json_talkie_message);
+                        talkieToProcess.push_back( TalkiePin(time_milliseconds, talkie_device, talkie_message) );
+                        play_reporting.total_incorrect--;    // Cancels out the initial ++ increase at the beginning of the loop
+                        play_reporting.total_validated++;
 
                     } else if (bpm_d == 0 && jsonElement.contains("tempo")) {
 

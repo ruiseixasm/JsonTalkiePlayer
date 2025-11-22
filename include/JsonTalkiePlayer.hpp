@@ -79,15 +79,14 @@ class TalkieDevice;
 
 class TalkieSocket {
 public:
-    
+    // Intended to have their IPs updated based on the response (echo)
     std::unordered_map<std::string, TalkieDevice> devices_by_name;
-    std::unordered_map<uint8_t, TalkieDevice> devices_by_channel;
-
 
 private:
     const bool verbose;
     int sockfd = -1;  // ONE socket for everything
     bool socket_initialized = false;
+    static struct sockaddr_in server_addr;
     
 public:
     TalkieSocket(bool verbose = false) : verbose(verbose) { }
@@ -96,13 +95,13 @@ public:
     // Explicitly delete copy assignment
     TalkieSocket& operator=(const TalkieSocket&) = delete;
     // Use this class as non-copyable but movable
-    TalkieSocket(TalkieSocket&&) = default;           // Move constructor OK
-    TalkieSocket& operator=(TalkieSocket&&) = default; // Move assignment OK
+    TalkieSocket(TalkieSocket&&) = default;             // Move constructor OK
+    TalkieSocket& operator=(TalkieSocket&&) = default;  // Move assignment OK
 
 
     bool initialize();
-    void sendToDevice(const std::string& ip, int port, const std::string& message);
-    void sendBroadcast(int port, const std::string& message);
+    bool sendToDevice(const std::string& ip, int port, const std::string& message);
+    bool sendBroadcast(int port, const std::string& message);
     void closeSocket();
 };
 
@@ -111,39 +110,29 @@ public:
 class TalkieDevice {
                 
     private:
-        static bool socket_initialized;
-        static int sockfd;
-        static struct sockaddr_in server_addr;
+        TalkieSocket * const talkie_socket = nullptr;
         const bool verbose;
         // Socket variables
-        std::string target_ip = "255.255.255.255";
+        std::string target_ip;  // Default constructor makes it empty
         int target_port;
     
         
     public:
-        TalkieDevice(int port = 5005, bool verbose = false)
-                    : target_port(port), verbose(verbose) { }
-        ~TalkieDevice() { closeSocket(); }
+        TalkieDevice(TalkieSocket * const socket, int port = 5005, bool verbose = false)
+                    : talkie_socket(socket), target_port(port), verbose(verbose) { }
 
         // Explicitly delete copy assignment
         TalkieDevice& operator=(const TalkieDevice&) = delete;
         // Use this class as non-copyable but movable
-        TalkieDevice(TalkieDevice&&) = default;           // Move constructor OK
-        TalkieDevice& operator=(TalkieDevice&&) = default; // Move assignment OK
+        TalkieDevice(TalkieDevice&&) = default;             // Move constructor OK
+        TalkieDevice& operator=(TalkieDevice&&) = default;  // Move assignment OK
 
-        bool initializeSocket();
         void setTargetIP(const std::string& ip);
-        void closeSocket();
-        bool hasSocketOpen() const { return socket_initialized; }
         std::string getTargetIp() const { return target_ip; }
         int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
         bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);
         
-        // Check if there are any messages waiting (non-blocking check)
-        static bool hasMessages();
-        // Check for and receive any incoming messages
-        static std::vector<std::string> receiveMessages();
 };
 
 
@@ -151,7 +140,6 @@ class TalkieDevice {
 class TalkiePin {
 private:
     const double time_ms;
-    TalkieSocket * const talkie_socket = nullptr;
     TalkieDevice * const talkie_device = nullptr;
     std::string talkie_message;
     // Auxiliary variable for the final playing loop!!
@@ -161,9 +149,9 @@ public:
     // Pin DEFAULT constructor, no arguments,
     // needed for emplace and insert of the std::unordered_map inside TalkieDevice class !!
     TalkiePin()
-        : time_ms(0),                   // Default to 0
-        talkie_device(nullptr),           // Default to nullptr
-        talkie_message(),                 // Default to an empty vector
+        : time_ms(0),                       // Default to 0
+        talkie_device(nullptr),             // Default to nullptr
+        talkie_message(),                   // Default to an empty vector
         delay_time_ms(-1)
     { }
 
@@ -177,9 +165,9 @@ public:
 
     // Pin copy constructor
     TalkiePin(const TalkiePin& other)
-        : time_ms(other.time_ms),                     // Copy the time_ms
-          talkie_device(other.talkie_device),             // Copy the pointer to the TalkieDevice
-          talkie_message(other.talkie_message),           // Copy the talkie_message vector
+        : time_ms(other.time_ms),                   // Copy the time_ms
+          talkie_device(other.talkie_device),       // Copy the pointer to the TalkieDevice
+          talkie_message(other.talkie_message),     // Copy the talkie_message vector
           delay_time_ms(other.delay_time_ms)
     { }
 
