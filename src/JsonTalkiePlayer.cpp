@@ -207,7 +207,7 @@ bool TalkieSocket::broadcastTempo(const nlohmann::json &json_talkie_clock, const
             {"i", 0},                       // ID
             {"c", 0},                       // checksum
             {"n", "bpm_10"},                // parameter name
-            {"t", bpm_10}                   // parameter value
+            {"v", bpm_10}                   // parameter value
         };
 
         broadcast_tempo["c"] = calculate_checksum(encode(broadcast_tempo));
