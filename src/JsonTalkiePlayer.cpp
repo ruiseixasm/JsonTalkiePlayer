@@ -141,7 +141,7 @@ bool TalkieSocket::sendToDevice(const std::string& ip, int port, const std::stri
     sendto(sockfd, message.c_str(), message.length(), 0,
             (sockaddr*)&target, sizeof(target));
     
-    if (verbose) std::cout << "Message: " << message << " sent to " << ip << ":" << port << std::endl;
+    // if (verbose) std::cout << "Message: " << message << " sent to " << ip << ":" << port << std::endl;
 
     return true;
 }
@@ -160,7 +160,7 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
     sendto(sockfd, message.c_str(), message.length(), 0,
             (sockaddr*)&broadcast_addr, sizeof(broadcast_addr));
     
-    if (verbose) std::cout << "Message: " << message << " broadcasted to port " << port << std::endl;
+    // if (verbose) std::cout << "Message: " << message << " broadcasted to port " << port << std::endl;
 
     return true;
 }
