@@ -103,7 +103,7 @@ public:
     bool initialize();
     bool sendToDevice(const std::string& ip, int port, const std::string& message);
     bool sendBroadcast(int port, const std::string& message);
-    bool broadcastTempo(nlohmann::json &json_talkie_clock, const long bpm_10);
+    bool broadcastTempo(const nlohmann::json &json_talkie_clock, const long bpm_10);
     bool hasMessages();
     std::vector<std::pair<std::string, std::string>> receiveMessages();
     bool updateAddresses();

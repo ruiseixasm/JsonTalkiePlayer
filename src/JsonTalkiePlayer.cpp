@@ -198,17 +198,20 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
 }
 
 
-bool TalkieSocket::broadcastTempo(nlohmann::json &json_talkie_clock, const long bpm_10) {
+bool TalkieSocket::broadcastTempo(const nlohmann::json &json_talkie_clock, const long bpm_10) {
 
     try {
-        json_talkie_clock["m"] = MessageCode::set;
-        json_talkie_clock["c"] = 0;
-        json_talkie_clock["i"] = 0;
-        json_talkie_clock["n"] = "bpm_10";
-        json_talkie_clock["v"] = bpm_10;
+        nlohmann::json broadcast_tempo = {
+            {"m", MessageCode::set},        // message type
+            {"f", json_talkie_clock["f"]},  // from
+            {"i", 0},                       // ID
+            {"c", 0},                       // checksum
+            {"n", "bpm_10"},                // parameter name
+            {"t", bpm_10}                   // parameter value
+        };
 
-        json_talkie_clock["c"] = calculate_checksum(encode(json_talkie_clock));
-        this->sendBroadcast(5005, encode(json_talkie_clock));
+        broadcast_tempo["c"] = calculate_checksum(encode(broadcast_tempo));
+        this->sendBroadcast(5005, encode(broadcast_tempo));
 
     } catch (const std::exception& e) {
 
