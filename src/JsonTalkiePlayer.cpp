@@ -215,6 +215,12 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
     sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
+    memset(buffer, 0, sizeof(buffer));
+    
+    int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
+                            (sockaddr*)&client_addr, &client_len);
+
+    
     do {
         memset(buffer, 0, sizeof(buffer));
         
@@ -239,6 +245,7 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
         }
     } while (hasMessages());
 
+
     return received_messages;
 }
 
@@ -257,12 +264,14 @@ bool TalkieSocket::updateAddresses() {
                 nlohmann::json json_message = nlohmann::json::parse(json_string);  // decode
                 uint16_t checksum = json_message["c"];
                 json_message["c"] = 0;
+                std::cout << "1. Unchecked message: " << json_string << std::endl;
                 if (checksum == calculate_checksum(encode(json_message))) {
                     std::string device_name = json_message["f"];
+                    std::cout << "2. Checked message: " << json_string << " of " << device_name << std::endl;
                     auto device_it = devices_by_name.find(device_name);  // Use iterator, not device
                     if (device_it != devices_by_name.end()) {
                         // Process the message here
-                        std::cout << "Received during sleep: " << json_string << std::endl;
+                        std::cout << "3. Accepted message: " << json_string << std::endl;
                         auto talkie_device = &device_it->second;  // Use iterator directly
                         talkie_device->setTargetIP(device_address);
                         std::cout << "New Address " << talkie_device->getTargetIp() << " for " << device_name << std::endl;
