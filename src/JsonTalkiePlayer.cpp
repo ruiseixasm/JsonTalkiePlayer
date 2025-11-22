@@ -180,104 +180,6 @@ void TalkieSocket::closeSocket() {
 
 
 
-
-
-// // TalkieDevice methods definition
-// bool TalkieDevice::initializeSocket() {
-//     if (socket_initialized)
-//         return true;
-
-// #ifdef _WIN32
-//     // Windows-specific initialization
-//     WSADATA wsaData;
-//     int wsa = WSAStartup(MAKEWORD(2,2), &wsaData);
-//     if (wsa != 0) {
-//         std::cerr << "WSAStartup failed: " << wsa << "\n";
-//         return false;
-//     }
-// #endif
-
-//     sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-// #ifdef _WIN32
-//     if (sockfd == INVALID_SOCKET) {
-//         std::cerr << "Failed to create socket. Error: " << WSAGetLastError() << "\n";
-// #else
-//     if (sockfd < 0) {
-//         std::cerr << "Failed to create socket. Error: " << strerror(errno) << "\n";
-// #endif
-//         return false;
-//     }
-
-//     // Enable broadcast support
-//     int bc = 1;  // Use int instead of BOOL for cross-platform
-//     if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char*)&bc, sizeof(bc)) < 0) {
-//         std::cerr << "Failed to enable broadcast: ";
-// #ifdef _WIN32
-//         std::cerr << WSAGetLastError() << "\n";
-//         closesocket(sockfd);
-// #else
-//         std::cerr << strerror(errno) << "\n";
-//         close(sockfd);
-// #endif
-//         return false;
-//     }
-
-//     // Bind to any local port so broadcast is allowed
-//     sockaddr_in localAddr {};
-//     localAddr.sin_family = AF_INET;
-//     localAddr.sin_port = htons(0);
-//     localAddr.sin_addr.s_addr = INADDR_ANY;
-
-// #ifdef _WIN32
-//     if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) == SOCKET_ERROR) {
-//         std::cerr << "Bind failed: " << WSAGetLastError() << "\n";
-//         closesocket(sockfd);
-// #else
-//     if (bind(sockfd, (sockaddr*)&localAddr, sizeof(localAddr)) < 0) {
-//         std::cerr << "Bind failed: " << strerror(errno) << "\n";
-//         close(sockfd);
-// #endif
-//         return false;
-//     }
-
-//     // Set remote broadcast address
-//     memset(&server_addr, 0, sizeof(server_addr));
-//     server_addr.sin_family = AF_INET;
-//     server_addr.sin_port = htons(target_port);
-//     server_addr.sin_addr.s_addr = INADDR_BROADCAST;  // 255.255.255.255
-
-//     socket_initialized = true;
-//     if (verbose) std::cout << "Broadcast socket initialized\n";
-
-//     return true;
-// }
-
-
-void TalkieDevice::setTargetIP(const std::string& ip) {
-    target_ip = ip;
-    
-    // // If socket exists, we need to update server_addr
-    // if (socket_initialized) {
-    //     memset(&server_addr, 0, sizeof(server_addr));
-    //     server_addr.sin_family = AF_INET;
-    //     server_addr.sin_port = htons(target_port);
-    //     inet_pton(AF_INET, target_ip.c_str(), &server_addr.sin_addr);
-        
-    //     if (verbose) std::cout << "Target updated to " << target_ip << ":" << target_port << "\n";
-    // }
-}
-
-
-// void TalkieDevice::closeSocket() {
-//     if (socket_initialized) {
-//         // Close Socket
-//         close(sockfd);
-//         sockfd = -1;
-//         socket_initialized = false;
-//     }
-// }
-
-
 bool TalkieDevice::sendMessage(const std::string& talkie_message) {
     if (talkie_message.empty()) {
         std::cerr << "Error: Empty message\n";
@@ -292,23 +194,6 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
         // Use specific IP
         return talkie_socket->sendToDevice(target_ip, target_port, talkie_message);
     }
-
-// #ifdef _WIN32
-//     bool error = (sent == SOCKET_ERROR);
-// #else
-//     bool error = (sent < 0);
-// #endif
-
-//     if (error) {
-//         std::cerr << "Failed to send message: ";
-// #ifdef _WIN32
-//         std::cerr << "WSA error " << WSAGetLastError();
-// #else
-//         std::cerr << strerror(errno);
-// #endif
-//         std::cerr << "\n";
-//         return false;
-//     }
 
     return false;
 }
@@ -341,58 +226,6 @@ bool TalkieDevice::sendTempo(const nlohmann::json& json_talkie_message, const in
 
     return true;
 }
-
-
-
-// // Check if there are any messages waiting (non-blocking check)
-// bool TalkieDevice::hasMessages() {
-//     if (sockfd < 0) return false;
-
-//     // Use select to check if data is available without blocking
-//     fd_set readfds;
-//     FD_ZERO(&readfds);
-//     FD_SET(sockfd, &readfds);
-
-//     struct timeval timeout;
-//     timeout.tv_sec = 0;
-//     timeout.tv_usec = 0; // Return immediately
-
-//     int result = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
-//     return result > 0 && FD_ISSET(sockfd, &readfds);
-// }
-
-// // Check for and receive any incoming messages
-// std::vector<std::string> TalkieDevice::receiveMessages() {
-//     std::vector<std::string> messages;
-//     if (sockfd < 0) return messages;
-
-//     char buffer[1024];
-//     struct sockaddr_in client_addr;
-//     socklen_t client_len = sizeof(client_addr);
-
-//     // Keep reading until no more messages are available
-//     while (true) {
-//         memset(buffer, 0, sizeof(buffer));
-//         int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
-//                                 (struct sockaddr*)&client_addr, &client_len);
-
-//         if (received > 0) {
-//             buffer[received] = '\0';
-//             char client_ip[INET_ADDRSTRLEN];
-//             inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
-            
-//             std::string message = std::string(client_ip) + ": " + buffer;
-//             messages.push_back(message);
-            
-//             std::cout << "Received: " << message << std::endl;
-//         } else {
-//             // No more data available (non-blocking would return immediately)
-//             break;
-//         }
-//     }
-
-//     return messages;
-// }
 
 
 

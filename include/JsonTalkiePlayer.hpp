@@ -127,7 +127,7 @@ class TalkieDevice {
         TalkieDevice(TalkieDevice&&) = default;             // Move constructor OK
         TalkieDevice& operator=(TalkieDevice&&) = default;  // Move assignment OK
 
-        void setTargetIP(const std::string& ip);
+        void setTargetIP(const std::string& ip) { target_ip = ip; }
         std::string getTargetIp() const { return target_ip; }
         int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
