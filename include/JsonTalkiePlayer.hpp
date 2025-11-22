@@ -87,6 +87,7 @@ private:
     int sockfd = -1;  // ONE socket for everything
     bool socket_initialized = false;
     static struct sockaddr_in server_addr;
+    std::vector<std::pair<std::string, std::string>> received_messages;
     
 public:
     TalkieSocket(bool verbose = false) : verbose(verbose) { }

@@ -204,10 +204,11 @@ bool TalkieSocket::hasMessages() {
 
 
 std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages() {
-    std::vector<std::pair<std::string, std::string>> messages;
+
+    received_messages.clear();
     
     if (!socket_initialized || sockfd == -1) {
-        return messages;
+        return received_messages;
     }
 
     char buffer[1024];
@@ -228,7 +229,7 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
             inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
             
             // Store IP and raw message separately
-            messages.push_back({client_ip, buffer});
+            received_messages.push_back({client_ip, buffer});
             
             if (verbose) {
                 std::cout << "Received from " << client_ip << " - " << buffer << std::endl;
@@ -238,7 +239,7 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
         }
     } while (hasMessages());
 
-    return messages;
+    return received_messages;
 }
 
 
