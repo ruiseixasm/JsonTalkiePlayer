@@ -102,7 +102,8 @@ public:
     bool sendToDevice(const std::string& ip, int port, const std::string& message);
     bool sendBroadcast(int port, const std::string& message);
     bool hasMessages();
-    std::vector<std::string> receiveMessages();
+    std::vector<std::pair<std::string, std::string>> receiveMessages();
+    bool updateAddresses();
     void closeSocket();
 };
 

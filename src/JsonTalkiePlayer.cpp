@@ -203,8 +203,8 @@ bool TalkieSocket::hasMessages() {
 }
 
 
-std::vector<std::string> TalkieSocket::receiveMessages() {
-    std::vector<std::string> messages;
+std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages() {
+    std::vector<std::pair<std::string, std::string>> messages;
     
     if (!socket_initialized || sockfd == -1) {
         return messages;
@@ -214,7 +214,6 @@ std::vector<std::string> TalkieSocket::receiveMessages() {
     sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
-    // Keep reading until no more messages are available
     do {
         memset(buffer, 0, sizeof(buffer));
         
@@ -224,24 +223,54 @@ std::vector<std::string> TalkieSocket::receiveMessages() {
         if (received > 0) {
             buffer[received] = '\0';
             
+            // Get IP from socket (always available)
             char client_ip[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
             
-            std::string message = std::string(client_ip) + ": " + buffer;
-            messages.push_back(message);
+            // Store IP and raw message separately
+            messages.push_back({client_ip, buffer});
             
-            // if (verbose) {
-            //     std::cout << "Received from " << client_ip << ":" << ntohs(client_addr.sin_port) 
-            //              << " - " << buffer << std::endl;
-            // }
+            if (verbose) {
+                std::cout << "Received from " << client_ip << " - " << buffer << std::endl;
+            }
         } else {
-            // No more data available or error
             break;
         }
     } while (hasMessages());
 
     return messages;
 }
+
+
+bool TalkieSocket::updateAddresses() {
+    
+    // Check and process messages
+    if (socket_initialized && this->hasMessages()) {
+        auto messages = this->receiveMessages();
+        for (const auto& full_message : messages) {
+            std::string device_address = full_message.first;
+            std::string json_string = full_message.second;
+            
+            nlohmann::json json_message = nlohmann::json::parse(json_string);  // decode
+            uint16_t checksum = json_message['c'];
+            json_message["c"] = 0;
+            if (checksum == calculate_checksum(encode(json_message))) {
+                std::string device_name = json_message['f'];
+                auto device_it = devices_by_name.find(device_name);  // Use iterator, not device
+                if (device_it != devices_by_name.end()) {
+                    // Process the message here
+                    std::cout << "Received during sleep: " << json_string << std::endl;
+                    auto talkie_device = &device_it->second;  // Use iterator directly
+                    talkie_device->setTargetIP(device_address);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
 
 
 void TalkieSocket::closeSocket() {
@@ -678,14 +707,20 @@ void highResolutionSleep(long long microseconds, TalkieSocket * const talkie_soc
         QueryPerformanceCounter(&end);
         elapsedMicroseconds = static_cast<double>(end.QuadPart - start.QuadPart) * 1e6 / frequency.QuadPart;
         
-        // Check and process messages
-        if (talkie_socket && talkie_socket->hasMessages()) {
-            auto messages = talkie_socket->receiveMessages();
-            for (const auto& msg : messages) {
-                // Process the message here
-                std::cout << "Received during sleep: " << msg << std::endl;
-            }
+        // Update received Addresses
+        if (talkie_socket) {
+            talkie_socket->updateAddresses();
         }
+
+
+        // // Check and process messages
+        // if (talkie_socket && talkie_socket->hasMessages()) {
+        //     auto messages = talkie_socket->receiveMessages();
+        //     for (const auto& msg : messages) {
+        //         // Process the message here
+        //         std::cout << "Received during sleep: " << msg.second << std::endl;
+        //     }
+        // }
         
         // Small sleep to prevent 100% CPU usage
         if (elapsedMicroseconds < microseconds - 1000) {  // If we have more than 1ms left
@@ -707,14 +742,20 @@ void highResolutionSleep(long long microseconds, TalkieSocket * const talkie_soc
         elapsedNanoseconds = (current.tv_sec - start.tv_sec) * 1000000000LL + 
                            (current.tv_nsec - start.tv_nsec);
         
-        // Check and process messages
-        if (talkie_socket && talkie_socket->hasMessages()) {
-            auto messages = talkie_socket->receiveMessages();
-            for (const auto& msg : messages) {
-                // Process the message here
-                std::cout << "Received during sleep: " << msg << std::endl;
-            }
+        // Update received Addresses
+        if (talkie_socket) {
+            talkie_socket->updateAddresses();
         }
+
+        
+        // // Check and process messages
+        // if (talkie_socket && talkie_socket->hasMessages()) {
+        //     auto messages = talkie_socket->receiveMessages();
+        //     for (const auto& msg : messages) {
+        //         // Process the message here
+        //         std::cout << "Received during sleep: " << msg << std::endl;
+        //     }
+        // }
         
         // Small sleep to prevent 100% CPU usage
         if (elapsedNanoseconds < targetNanoseconds - 1000000) {  // If we have more than 1ms left
