@@ -42,7 +42,6 @@ static uint16_t calculate_checksum(const std::string& data) {
     size_t len = data.length();
 	uint8_t data_bytes[1024] = {0};
 	size_t data_bytes_i = 0;
-
 	
 	// ASCII byte values:
 	// 	'c' = 99
@@ -50,7 +49,6 @@ static uint16_t calculate_checksum(const std::string& data) {
 	// 	'"' = 34
 	// 	'0' = 48
 	// 	'9' = 57
-    
 
 	// Has to be pre processed (linearly)
 	bool at_c0 = false;
@@ -60,7 +58,7 @@ static uint16_t calculate_checksum(const std::string& data) {
 			data_bytes[data_bytes_i++] = '0';
 			continue;
 		} else if (at_c0) {
-			if (bytes[i] < 48 || bytes[i] > 57) {
+			if (bytes[i] < '0' || bytes[i] > '9') {
 				at_c0 = false;
 			} else {
 				continue;
@@ -70,7 +68,7 @@ static uint16_t calculate_checksum(const std::string& data) {
 		data_bytes_i++;
 	}
 	len = data_bytes_i;
-    std::cout << "Final message: " << data_bytes << std::endl;
+    // std::cout << "Final message: " << data_bytes << std::endl;
 
 	uint16_t chunk = 0;
 
