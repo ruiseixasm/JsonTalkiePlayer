@@ -290,7 +290,7 @@ bool TalkieSocket::updateAddresses() {
                 std::string device_address = full_message.first;
                 std::string json_string = full_message.second;
                 
-                std::cout << "1. Unchecked message: " << json_string << std::endl;
+                // std::cout << "1. Unchecked message: " << json_string << std::endl;
                 
                 // Stupid json parser changes content order !!!
                 nlohmann::json json_message = nlohmann::json::parse(json_string);
@@ -306,15 +306,15 @@ bool TalkieSocket::updateAddresses() {
                     if (talkie_device->getTargetIP().empty()) {
 
                         uint16_t checksum = json_message["c"];
-                        std::cout << "   Expected checksum: " << checksum << std::endl;
+                        // std::cout << "   Expected checksum: " << checksum << std::endl;
                         
                         uint16_t calculated = calculate_checksum(json_string);
-                        std::cout << "   Calculated checksum: " << calculated << std::endl;
+                        // std::cout << "   Calculated checksum: " << calculated << std::endl;
                         
                         if (checksum == calculated) {
                                 // std::cout << "3. Accepted message: " << json_string << std::endl;
                                 talkie_device->setTargetIP(device_address);
-                                std::cout << "New Address " << device_address << " for " << device_name << std::endl;
+                                // std::cout << "New Address " << device_address << " for " << device_name << std::endl;
                                 total_updates++;
                                 updated_addresses = true;
                         } else {
