@@ -131,7 +131,7 @@ class TalkieDevice {
         TalkieDevice& operator=(TalkieDevice&&) = default;  // Move assignment OK
 
         void setTargetIP(const std::string& ip) { target_ip = ip; }
-        std::string getTargetIp() const { return target_ip; }
+        std::string getTargetIP() const { return target_ip; }
         int getTargetPort() const { return target_port; }
         bool sendMessage(const std::string& talkie_message);
         bool sendTempo(const nlohmann::json& json_talkie_message, const int bpm_n, const int bpm_d);

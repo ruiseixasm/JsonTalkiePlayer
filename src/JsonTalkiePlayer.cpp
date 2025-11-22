@@ -263,38 +263,45 @@ bool TalkieSocket::updateAddresses() {
                 
                 // Stupid json parser changes content order !!!
                 nlohmann::json json_message = nlohmann::json::parse(json_string);
-                uint16_t checksum = json_message["c"];
-                // std::cout << "   Expected checksum: " << checksum << std::endl;
-                
-                // Create checksum string by replacing "c":VALUE with "c":0
-                std::string checksum_str = json_string;
-                std::string search_pattern = "\"c\":" + std::to_string(checksum);
-                std::string replace_pattern = "\"c\":0";
-                
-                size_t pos = checksum_str.find(search_pattern);
-                if (pos != std::string::npos) {
-                    checksum_str.replace(pos, search_pattern.length(), replace_pattern);
-                }
-                
-                // std::cout << "   String for checksum: " << checksum_str << std::endl;
-                
-                uint16_t calculated = calculate_checksum(checksum_str);
-                // std::cout << "   Calculated checksum: " << calculated << std::endl;
-                
-                if (checksum == calculated) {
-                    std::string device_name = json_message["f"];
-                    // std::cout << "2. Checked message: " << json_string << " of " << device_name << std::endl;
-                    auto device_it = devices_by_name.find(device_name);
-                    if (device_it != devices_by_name.end()) {
-                        // std::cout << "3. Accepted message: " << json_string << std::endl;
-                        auto talkie_device = &device_it->second;
-                        talkie_device->setTargetIP(device_address);
-                        // std::cout << "New Address " << device_address << " for " << device_name << std::endl;
-                        updated_addresses = true;
+
+                // IT'S FASTER THIS WAY
+                std::string device_name = json_message["f"];
+                // std::cout << "2. Checked message: " << json_string << " of " << device_name << std::endl;
+                auto device_it = devices_by_name.find(device_name);
+                if (device_it != devices_by_name.end()) {
+
+                    auto talkie_device = &device_it->second;
+                    // Checks if it has an ip already (avoids extra heavy string manipulation and searching)
+                    if (talkie_device->getTargetIP().empty()) {
+
+                        uint16_t checksum = json_message["c"];
+                        // std::cout << "   Expected checksum: " << checksum << std::endl;
+                        
+                        // Create checksum string by replacing "c":VALUE with "c":0
+                        std::string checksum_str = json_string;
+                        std::string search_pattern = "\"c\":" + std::to_string(checksum);
+                        std::string replace_pattern = "\"c\":0";
+                        
+                        size_t pos = checksum_str.find(search_pattern);
+                        if (pos != std::string::npos) {
+                            checksum_str.replace(pos, search_pattern.length(), replace_pattern);
+                        }
+                        
+                        // std::cout << "   String for checksum: " << checksum_str << std::endl;
+                        
+                        uint16_t calculated = calculate_checksum(checksum_str);
+                        // std::cout << "   Calculated checksum: " << calculated << std::endl;
+                        
+                        if (checksum == calculated) {
+                                // std::cout << "3. Accepted message: " << json_string << std::endl;
+                                talkie_device->setTargetIP(device_address);
+                                std::cout << "New Address " << device_address << " for " << device_name << std::endl;
+                                updated_addresses = true;
+                        } else {
+                            std::cout << "   ❌ CHECKSUM FAILED! Expected: " << checksum 
+                                    << ", Got: " << calculated << std::endl;
+                        }
                     }
-                } else {
-                    std::cout << "   ❌ CHECKSUM FAILED! Expected: " << checksum 
-                              << ", Got: " << calculated << std::endl;
                 }
             }
         }
