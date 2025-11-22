@@ -243,7 +243,7 @@ std::vector<std::pair<std::string, std::string>> TalkieSocket::receiveMessages()
 
 
 bool TalkieSocket::updateAddresses() {
-    
+    bool updated_addresses = false;
     try {
 
         // Check and process messages
@@ -264,7 +264,8 @@ bool TalkieSocket::updateAddresses() {
                         std::cout << "Received during sleep: " << json_string << std::endl;
                         auto talkie_device = &device_it->second;  // Use iterator directly
                         talkie_device->setTargetIP(device_address);
-                        return true;
+                        std::cout << "New Address " << talkie_device->getTargetIp() << " for " << device_name << std::endl;
+                        updated_addresses = true;   // Can't end abruptly on iterables, so, no return here!!
                     }
                 }
             }
@@ -276,7 +277,7 @@ bool TalkieSocket::updateAddresses() {
         return false;
     }
 
-    return false;
+    return updated_addresses;
 }
 
 
