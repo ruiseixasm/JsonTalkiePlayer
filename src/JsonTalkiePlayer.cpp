@@ -40,14 +40,47 @@ static uint16_t calculate_checksum(const std::string& data) {
     uint16_t checksum = 0;
     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data.c_str());
     size_t len = data.length();
+	uint8_t data_bytes[1024] = {0};
+	size_t data_bytes_i = 0;
+
+	
+	// ASCII byte values:
+	// 	'c' = 99
+	// 	':' = 58
+	// 	'"' = 34
+	// 	'0' = 48
+	// 	'9' = 57
     
+
+	// Has to be pre processed (linearly)
+	bool at_c0 = false;
+	for (size_t i = 0; i < len; ++i) {
+		if (!at_c0 && i > 3 && bytes[i - 3] == 'c' && bytes[i - 1] == ':' && bytes[i - 4] == '"' && bytes[i - 2] == '"') {
+			at_c0 = true;
+			data_bytes[data_bytes_i++] = '0';
+			continue;
+		} else if (at_c0) {
+			if (bytes[i] < 48 || bytes[i] > 57) {
+				at_c0 = false;
+			} else {
+				continue;
+			}
+		}
+		data_bytes[data_bytes_i] = bytes[i];
+		data_bytes_i++;
+	}
+	len = data_bytes_i;
+    std::cout << "Final message: " << data_bytes << std::endl;
+
+	uint16_t chunk = 0;
+
     for (size_t i = 0; i < len; i += 2) {
-        // Combine two bytes into 16-bit value
-        uint16_t chunk = bytes[i] << 8;
-        if (i + 1 < len) {
-            chunk |= bytes[i + 1];
-        }
-        checksum ^= chunk;
+		// Combine two data_bytes into 16-bit value
+		chunk = data_bytes[i] << 8;
+		if (i + 1 < len) {
+			chunk |= data_bytes[i + 1];
+		}
+		checksum ^= chunk;
     }
     
     return checksum & 0xFFFF;
@@ -259,7 +292,7 @@ bool TalkieSocket::updateAddresses() {
                 std::string device_address = full_message.first;
                 std::string json_string = full_message.second;
                 
-                // std::cout << "1. Unchecked message: " << json_string << std::endl;
+                std::cout << "1. Unchecked message: " << json_string << std::endl;
                 
                 // Stupid json parser changes content order !!!
                 nlohmann::json json_message = nlohmann::json::parse(json_string);
@@ -275,22 +308,10 @@ bool TalkieSocket::updateAddresses() {
                     if (talkie_device->getTargetIP().empty()) {
 
                         uint16_t checksum = json_message["c"];
-                        // std::cout << "   Expected checksum: " << checksum << std::endl;
+                        std::cout << "   Expected checksum: " << checksum << std::endl;
                         
-                        // Create checksum string by replacing "c":VALUE with "c":0
-                        std::string checksum_str = json_string;
-                        std::string search_pattern = "\"c\":" + std::to_string(checksum);
-                        std::string replace_pattern = "\"c\":0";
-                        
-                        size_t pos = checksum_str.find(search_pattern);
-                        if (pos != std::string::npos) {
-                            checksum_str.replace(pos, search_pattern.length(), replace_pattern);
-                        }
-                        
-                        // std::cout << "   String for checksum: " << checksum_str << std::endl;
-                        
-                        uint16_t calculated = calculate_checksum(checksum_str);
-                        // std::cout << "   Calculated checksum: " << calculated << std::endl;
+                        uint16_t calculated = calculate_checksum(json_string);
+                        std::cout << "   Calculated checksum: " << calculated << std::endl;
                         
                         if (checksum == calculated) {
                                 // std::cout << "3. Accepted message: " << json_string << std::endl;
@@ -299,7 +320,7 @@ bool TalkieSocket::updateAddresses() {
                                 total_updates++;
                                 updated_addresses = true;
                         } else {
-                            std::cout << "   ❌ CHECKSUM FAILED! Expected: " << checksum 
+                            std::cout << "CHECKSUM FAILED! Expected: " << checksum 
                                     << ", Got: " << calculated << std::endl;
                         }
                     }
