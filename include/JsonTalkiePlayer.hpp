@@ -98,10 +98,11 @@ public:
     TalkieSocket(TalkieSocket&&) = default;             // Move constructor OK
     TalkieSocket& operator=(TalkieSocket&&) = default;  // Move assignment OK
 
-
     bool initialize();
     bool sendToDevice(const std::string& ip, int port, const std::string& message);
     bool sendBroadcast(int port, const std::string& message);
+    bool hasMessages();
+    std::vector<std::string> receiveMessages();
     void closeSocket();
 };
 

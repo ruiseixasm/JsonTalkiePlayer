@@ -166,6 +166,74 @@ bool TalkieSocket::sendBroadcast(int port, const std::string& message) {
 }
 
 
+bool TalkieSocket::hasMessages() {
+    if (!socket_initialized || sockfd == -1) {
+        return false;
+    }
+
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;  // Return immediately
+
+#ifdef _WIN32
+    int result = select(0, &readfds, nullptr, nullptr, &timeout);
+#else
+    int result = select(sockfd + 1, &readfds, nullptr, nullptr, &timeout);
+#endif
+
+    if (result > 0 && FD_ISSET(sockfd, &readfds)) {
+        return true;
+    }
+    
+    return false;
+}
+
+
+std::vector<std::string> TalkieSocket::receiveMessages() {
+    std::vector<std::string> messages;
+    
+    if (!socket_initialized || sockfd == -1) {
+        return messages;
+    }
+
+    char buffer[1024];
+    sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+
+    // Keep reading until no more messages are available
+    while (true) {
+        memset(buffer, 0, sizeof(buffer));
+        
+        int received = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
+                               (sockaddr*)&client_addr, &client_len);
+
+        if (received > 0) {
+            buffer[received] = '\0';
+            
+            char client_ip[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, INET_ADDRSTRLEN);
+            
+            std::string message = std::string(client_ip) + ": " + buffer;
+            messages.push_back(message);
+            
+            if (verbose) {
+                std::cout << "Received from " << client_ip << ":" << ntohs(client_addr.sin_port) 
+                         << " - " << buffer << std::endl;
+            }
+        } else {
+            // No more data available or error
+            break;
+        }
+    }
+
+    return messages;
+}
+
+
 void TalkieSocket::closeSocket() {
     if (sockfd != -1) {
 #ifdef _WIN32
