@@ -141,7 +141,7 @@ bool TalkieSocket::initialize() {
     local_addr.sin_port = htons(5005);  // Default port
     
     if (bind(sockfd, (sockaddr*)&local_addr, sizeof(local_addr)) < 0) {
-        std::cerr << "Bind failed: ";
+        std::cerr << "Socket initialization failed, unable to bind: ";
 #ifdef _WIN32
         std::cerr << WSAGetLastError() << std::endl;
         closesocket(sockfd);
@@ -397,9 +397,6 @@ bool TalkieDevice::sendMessage(const std::string& talkie_message) {
 
 
 
-
-
-
 // TalkiePin methods definition
 void TalkiePin::pluckTooth() {
     if (talkie_device != nullptr)
@@ -426,31 +423,6 @@ void setRealTimeScheduling() {
 
 int PlayList(const char* json_str, const int delay_ms, bool verbose) {
     
-    disableBackgroundThrottling();
-
-    // Set real-time scheduling
-    setRealTimeScheduling();
-    
-    #ifdef DEBUGGING
-    auto debugging_start = std::chrono::high_resolution_clock::now();
-    auto debugging_now = debugging_start;
-    auto debugging_last = debugging_now;
-    long long completion_time_us = 0;
-    #endif
-
-    struct PlayReporting {
-        size_t json_processing  = 0;    // milliseconds
-        size_t total_validated  = 0;
-        size_t total_incorrect  = 0;
-        double total_drag       = 0.0;
-        double total_delay      = 0.0;
-        double maximum_delay    = 0.0;
-        double minimum_delay    = 0.0;
-        double average_delay    = 0.0;
-        double sd_delay         = 0.0;
-    };
-    PlayReporting play_reporting;
-
     if (verbose) {
         std::cout << "JsonTalkiePlayer version: " << VERSION << std::endl;
         std::cout << "Delay set to: " << delay_ms << " ms" << std::endl;
@@ -460,6 +432,31 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
     
     // Where the playing happens
     if (talkie_socket.initialize()) {
+
+        disableBackgroundThrottling();
+
+        // Set real-time scheduling
+        setRealTimeScheduling();
+        
+        #ifdef DEBUGGING
+        auto debugging_start = std::chrono::high_resolution_clock::now();
+        auto debugging_now = debugging_start;
+        auto debugging_last = debugging_now;
+        long long completion_time_us = 0;
+        #endif
+
+        struct PlayReporting {
+            size_t json_processing  = 0;    // milliseconds
+            size_t total_validated  = 0;
+            size_t total_incorrect  = 0;
+            double total_drag       = 0.0;
+            double total_delay      = 0.0;
+            double maximum_delay    = 0.0;
+            double minimum_delay    = 0.0;
+            double average_delay    = 0.0;
+            double sd_delay         = 0.0;
+        };
+        PlayReporting play_reporting;
 
         std::list<TalkiePin> talkieToProcess;
         std::list<TalkiePin> talkieProcessed;
@@ -710,20 +707,18 @@ int PlayList(const char* json_str, const int delay_ms, bool verbose) {
 
         }
 
+        // Where the reporting is finally done
+        if (verbose) std::cout << std::endl << "Talkie stats reporting:" << std::endl;
+        // Set fixed floating-point notation and precision
+        if (verbose) std::cout << std::fixed << std::setprecision(3);
+        if (verbose) std::cout << "\tTotal drag (ms):      " << std::setw(34) << play_reporting.total_drag << " \\" << std::endl;
+        if (verbose) std::cout << "\tCumulative delay (ms):" << std::setw(34) << play_reporting.total_delay << " /" << std::endl;
+        if (verbose) std::cout << "\tMaximum delay (ms): " << std::setw(36) << play_reporting.maximum_delay << " \\" << std::endl;
+        if (verbose) std::cout << "\tMinimum delay (ms): " << std::setw(36) << play_reporting.minimum_delay << " /" << std::endl;
+        if (verbose) std::cout << "\tAverage delay (ms): " << std::setw(36) << play_reporting.average_delay << " \\" << std::endl;
+        if (verbose) std::cout << "\tStandard deviation of delays (ms):" << std::setw(36 - 14) << play_reporting.sd_delay << " /"  << std::endl;
+
     }
-
-    // Where the reporting is finally done
-    if (verbose) std::cout << std::endl << "Talkie stats reporting:" << std::endl;
-    // Set fixed floating-point notation and precision
-    if (verbose) std::cout << std::fixed << std::setprecision(3);
-    if (verbose) std::cout << "\tTotal drag (ms):      " << std::setw(34) << play_reporting.total_drag << " \\" << std::endl;
-    if (verbose) std::cout << "\tCumulative delay (ms):" << std::setw(34) << play_reporting.total_delay << " /" << std::endl;
-    if (verbose) std::cout << "\tMaximum delay (ms): " << std::setw(36) << play_reporting.maximum_delay << " \\" << std::endl;
-    if (verbose) std::cout << "\tMinimum delay (ms): " << std::setw(36) << play_reporting.minimum_delay << " /" << std::endl;
-    if (verbose) std::cout << "\tAverage delay (ms): " << std::setw(36) << play_reporting.average_delay << " \\" << std::endl;
-    if (verbose) std::cout << "\tStandard deviation of delays (ms):" << std::setw(36 - 14) << play_reporting.sd_delay << " /"  << std::endl;
-
-
     return 0;
 }
 
